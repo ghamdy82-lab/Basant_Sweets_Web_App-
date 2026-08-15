@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم بسنت - تصميم شيكي</title>
+    <!-- خط الموقع -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK المخزن -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #FFFDF9; }
+        .table-row:hover { background-color: #fff8f0; }
+        .modal { animation: fadeInScale 0.2s ease forwards; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 2px solid #C69C6D; }
+        
+        /* تظبيط الموبايل والسحب */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #C69C6D; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-[#3A261D]">
+
+    <!-- الهيدر -->
+    <div class="bg-[#5A1E20] text-white py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="https://i.postimg.cc/YSHYD6c2/Whats-App-Image-2026-07-03-at-5-32-37-PM-(1).jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-[#C69C6D]" alt="بسنت">
+                <div>
+                    <h1 class="text-xl md:text-3xl font-bold">لوحة تحكم بسنت</h1>
+                    <p class="text-[#C69C6D] text-xs md:text-sm flex items-center gap-2">
+                        <i class="fas fa-star"></i> 
+                        تم التصميم بواسطة العبقرية شيكي
+                    </p>
+                </div>
+            </div>
+            <div class="bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm flex items-center gap-2">
+                <i class="fas fa-sync fa-spin text-[#C69C6D]"></i>
+                <span id="syncStatus">متصلة</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+
+        <!-- الفلاتر والزراير -->
+        <div class="flex flex-col md:flex-row gap-4 mb-6 md:items-end">
+            <div class="flex-1 w-full">
+                <input type="text" id="searchInput" placeholder="🔍 ابحثي باسم المنتج يا بسنت..." 
+                       class="w-full px-5 py-3 border-2 border-[#C69C6D] rounded-2xl focus:outline-none focus:border-[#5A1E20] shadow-sm"
+                       onkeyup="filterTable()">
+            </div>
+            <div class="w-full md:w-auto">
+                <select id="categoryFilter" onchange="filterTable()" 
+                        class="w-full md:w-auto px-5 py-3 border-2 border-[#C69C6D] rounded-2xl focus:outline-none focus:border-[#5A1E20] bg-white shadow-sm">
+                    <option value="">كل الأقسام</option>
+                    <option value="western">حلويات غربية</option>
+                    <option value="gateau">جاتوهات</option>
+                    <option value="oriental">حلويات شرقية</option>
+                    <option value="meat">لحوم بلدي</option>
+                    <option value="frozen">مجمدات</option>
+                    <option value="grocery">بقالة وأجبان</option>
+                    <option value="sauces">صوصات</option>
+                    <option value="tasali">تسالي ومشروبات</option>
+                    <option value="special_offers">عروض خاصة</option>
+                </select>
+            </div>
+            
+            <!-- زرار إدارة العروض الجديد -->
+            <button onclick="showOffersModal()" 
+                    class="w-full md:w-auto bg-[#C0392B] hover:bg-[#A93226] transition-colors text-white font-bold px-6 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-fire"></i>
+                <span>إدارة بانر العروض</span>
+            </button>
+
+            <!-- زرار إضافة منتج -->
+            <button onclick="showAddModal()" 
+                    class="w-full md:w-auto bg-[#5A1E20] hover:bg-[#7A2E31] transition-colors text-white font-bold px-6 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-plus"></i>
+                <span>إضافة منتج</span>
+            </button>
+        </div>
+
+        <!-- جدول المنتجات -->
+        <div class="bg-white rounded-3xl shadow-xl border border-[#C69C6D]/30 overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full min-w-[700px] md:min-w-[900px]">
+                    <thead class="bg-[#5A1E20] text-white">
+                        <tr>
+                            <th class="px-4 py-4 text-right font-bold w-20">الصورة</th>
+                            <th class="px-4 py-4 text-right font-bold">اسم المنتج</th>
+                            <th class="px-4 py-4 text-right font-bold">القسم</th>
+                            <th class="px-4 py-4 text-center font-bold">السعر</th>
+                            <th class="px-4 py-4 text-center font-bold">بالكيلو؟</th>
+                            <th class="px-4 py-4 text-center font-bold">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable" class="divide-y divide-gray-100 text-sm">
+                        <!-- المنتجات هتنزل هنا -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-4 text-sm text-gray-500 font-bold">
+            إجمالي المنتجات: <span id="totalCount" class="text-[#5A1E20] text-lg">0</span>
+        </div>
+    </div>
+
+    <!-- شاشة إدارة بانر العروض (الجديدة) -->
+    <div id="offersModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#C0392B] text-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-xl">🔥 إدارة بانر العروض الأسبوعية</h3>
+                <button onclick="closeOffersModal()" class="text-3xl leading-none hover:text-gray-200">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100 mb-4">
+                    <h4 class="font-bold text-[#C0392B] mb-3">إضافة عرض جديد للبانر</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input id="offerTitle" type="text" placeholder="اسم العرض (مثال: عرض التوفير)" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                        <input id="offerPrice" type="text" placeholder="السعر (مثال: بـ 60 ج)" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                    </div>
+                    <div class="mb-3">
+                        <input id="offerImg" type="text" placeholder="رابط صورة العرض" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full text-left outline-none focus:border-[#C0392B]" dir="ltr">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">لما الزبون يدوس على العرض يروح قسم إيه؟</label>
+                        <select id="offerLink" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                            <option value="special_offers">عروض خاصة</option>
+                            <option value="frozen">المجمدات</option>
+                            <option value="gateau">الجاتوهات</option>
+                            <option value="western">حلويات غربية</option>
+                            <option value="oriental">حلويات شرقية</option>
+                        </select>
+                    </div>
+                    <button onclick="saveOfferToBanner()" class="bg-[#C0392B] hover:bg-[#922B21] text-white px-4 py-2 rounded-xl font-bold w-full transition-colors">إضافة العرض للبانر</button>
+                </div>
+
+                <h4 class="font-bold text-[#5A1E20] mb-2">العروض الحالية المعروضة للزباين:</h4>
+                <div class="border rounded-xl overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2 text-right">الصورة</th>
+                                <th class="p-2 text-right">تفاصيل العرض</th>
+                                <th class="p-2 text-center">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offersTableBody" class="divide-y">
+                            <!-- العروض هتنزل هنا -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة إضافة وتعديل المنتجات العادية -->
+    <div id="productModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#5A1E20] text-white rounded-t-3xl shrink-0">
+                <h3 id="modalTitle" class="font-bold text-xl">إضافة منتج جديد</h3>
+                <button onclick="closeModal()" class="text-3xl leading-none hover:text-[#C69C6D]">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <input type="hidden" id="editDocId">
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">اسم المنتج *</label>
+                    <input id="prodName" type="text" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">القسم الرئيسي *</label>
+                        <select id="prodMainCat" onchange="updateSubCatOptions()" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none bg-white">
+                            <option value="western">حلويات غربية</option>
+                            <option value="gateau">جاتوهات</option>
+                            <option value="oriental">حلويات شرقية</option>
+                            <option value="meat">لحوم بلدي</option>
+                            <option value="frozen">مجمدات</option>
+                            <option value="grocery">بقالة وأجبان</option>
+                            <option value="sauces">صوصات</option>
+                            <option value="tasali">تسالي ومشروبات</option>
+                            <option value="special_offers">عروض خاصة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">القسم الفرعي</label>
+                        <select id="prodSubCat" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none bg-white"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">السعر (بالجنيه) *</label>
+                        <input id="prodPrice" type="number" step="1" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex items-center gap-3 cursor-pointer bg-[#fff8f0] px-4 py-3 rounded-2xl border border-[#C69C6D] w-full">
+                            <input type="checkbox" id="prodFlexible" class="w-5 h-5 accent-[#5A1E20]">
+                            <span class="font-bold text-sm">يتباع بالكيلو (مرن)</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">رابط الصورة</label>
+                    <input id="prodImageUrl" type="text" placeholder="رابط الصورة" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none text-sm">
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t flex flex-row gap-3 justify-end bg-gray-50 rounded-b-3xl shrink-0">
+                <button onclick="closeModal()" class="px-6 py-2.5 rounded-2xl font-bold border flex-1 md:flex-none bg-white">إلغاء</button>
+                <button onclick="saveProduct()" id="saveBtn" class="bg-[#5A1E20] text-white px-8 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 flex-1 md:flex-none">
+                    <span>حفظ المنتج</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyANnUH5L9bSTBTzwnbiWqZutctrUgGEu8E",
+            authDomain: "mazen-admin.firebaseapp.com",
+            projectId: "mazen-admin",
+            storageBucket: "mazen-admin.firebasestorage.app",
+            messagingSenderId: "841158763037",
+            appId: "1:841158763037:web:e2f4f540135beb01fbdcf4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let products = [];
+        let bannerOffers = [];
+        let currentFilter = { search: '', category: '' };
+
+        function loadProducts() {
+            const tbody = document.getElementById('productsTable');
+            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-[#C69C6D]"><i class="fas fa-spinner fa-spin text-3xl"></i></td></tr>`;
+
+            db.collection("products").orderBy("mainCat").onSnapshot((snapshot) => {
+                products = [];
+                snapshot.forEach((doc) => products.push({ docId: doc.id, ...doc.data() }));
+                renderTable();
+                document.getElementById('syncStatus').innerHTML = 'الربط شغال زي الفل يا شيكي';
+            });
+            
+            // تحميل العروض بتاعة البانر
+            db.collection("banner_offers").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+                bannerOffers = [];
+                snapshot.forEach((doc) => bannerOffers.push({ docId: doc.id, ...doc.data() }));
+                renderOffersTable();
+            });
+        }
+
+        function getMainCatName(cat) {
+            const names = {
+                western: "حلويات غربية", gateau: "جاتوهات", oriental: "حلويات شرقية",
+                meat: "لحوم بلدي", frozen: "مجمدات", grocery: "بقالة وأجبان",
+                sauces: "صوصات", tasali: "تسالي ومشروبات", special_offers: "عروض خاصة"
+            };
+            return names[cat] || cat;
+        }
+
+        function renderTable(filteredProducts = null) {
+            const tbody = document.getElementById('productsTable');
+            let data = filteredProducts || products;
+
+            if (currentFilter.search) data = data.filter(p => p.name.toLowerCase().includes(currentFilter.search));
+            if (currentFilter.category) data = data.filter(p => p.mainCat === currentFilter.category);
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center font-bold text-red-500">مفيش منتجات يا شيكي</td></tr>`;
+                document.getElementById('totalCount').innerText = '0';
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                const isFlex = p.isFlexible ? `<span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-bold">نعم</span>` : `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">لا</span>`;
+                const imgHtml = p.image ? `<img src="${p.image}" class="product-img">` : `<div class="w-[60px] h-[60px] bg-gray-200 rounded-xl"></div>`;
+
+                return `
+                <tr class="table-row border-b border-gray-100">
+                    <td class="px-4 py-3">${imgHtml}</td>
+                    <td class="px-4 py-3 font-bold text-base whitespace-nowrap">${p.name}</td>
+                    <td class="px-4 py-3 whitespace-nowrap"><span class="bg-[#5A1E20] text-white text-xs px-3 py-1 rounded-full">${getMainCatName(p.mainCat)}</span></td>
+                    <td class="px-4 py-3 text-center font-extrabold text-[#C0392B] whitespace-nowrap">${p.price} ج</td>
+                    <td class="px-4 py-3 text-center">${isFlex}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick="editProduct('${p.docId}')" class="w-8 h-8 flex items-center justify-center bg-[#C69C6D] text-white rounded-lg hover:bg-[#b0885e]"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteProduct('${p.docId}', '${p.name}')" class="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+            document.getElementById('totalCount').innerText = data.length;
+        }
+
+        function filterTable() {
+            currentFilter.search = document.getElementById('searchInput').value.toLowerCase().trim();
+            currentFilter.category = document.getElementById('categoryFilter').value;
+            renderTable();
+        }
+
+        const subCatMap = {
+            western: [{ id: "torts_28", name: "مقاس 28 وقلب" }, { id: "torts_24", name: "تورت 24" }, { id: "torts_18", name: "تورت 18" }],
+            gateau: [{ id: "all_gateau", name: "كل الجاتوهات" }],
+            oriental: [{ id: "all", name: "كل الحلويات الشرقية" }],
+            meat: [{ id: "kandooz", name: "لحوم كندوز" }, { id: "dani", name: "لحوم ضاني" }, { id: "fwa2ek", name: "فواكه اللحوم" }],
+            frozen: [{ id: "strips", name: "استربس" }, { id: "burger", name: "برجر وكفتة" }],
+            grocery: [{ id: "all", name: "كل البقالة" }],
+            sauces: [{ id: "all", name: "كل الصوصات" }],
+            tasali: [{ id: "all", name: "كل التسالي" }],
+            special_offers: [{ id: "all", name: "كل العروض" }]
+        };
+
+        function updateSubCatOptions(selectedValue = null) {
+            const mainCat = document.getElementById('prodMainCat').value;
+            const subSelect = document.getElementById('prodSubCat');
+            subSelect.innerHTML = '';
+            (subCatMap[mainCat] || []).forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt.id; optionEl.textContent = opt.name;
+                if (selectedValue === opt.id) optionEl.selected = true;
+                subSelect.appendChild(optionEl);
+            });
+        }
+
+        /* --- أكواد المنتجات العادية --- */
+        function showAddModal() {
+            document.getElementById('modalTitle').innerText = 'إضافة منتج جديد';
+            document.getElementById('editDocId').value = '';
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodImageUrl').value = '';
+            document.getElementById('prodFlexible').checked = false;
+            document.getElementById('prodMainCat').value = 'western';
+            updateSubCatOptions();
+            document.getElementById('productModal').classList.replace('hidden', 'flex');
+        }
+
+        function editProduct(docId) {
+            const product = products.find(p => p.docId === docId);
+            if (!product) return;
+            document.getElementById('modalTitle').innerText = 'تعديل المنتج';
+            document.getElementById('editDocId').value = docId;
+            document.getElementById('prodName').value = product.name || '';
+            document.getElementById('prodPrice').value = product.price || '';
+            document.getElementById('prodImageUrl').value = product.image || '';
+            document.getElementById('prodFlexible').checked = !!product.isFlexible;
+            document.getElementById('prodMainCat').value = product.mainCat;
+            updateSubCatOptions(product.subCat);
+            document.getElementById('productModal').classList.replace('hidden', 'flex');
+        }
+
+        function closeModal() { document.getElementById('productModal').classList.replace('flex', 'hidden'); }
+
+        async function saveProduct() {
+            const docId = document.getElementById('editDocId').value;
+            const data = {
+                name: document.getElementById('prodName').value.trim(),
+                mainCat: document.getElementById('prodMainCat').value,
+                subCat: document.getElementById('prodSubCat').value || 'all',
+                price: parseFloat(document.getElementById('prodPrice').value),
+                image: document.getElementById('prodImageUrl').value.trim(),
+                isFlexible: document.getElementById('prodFlexible').checked,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            if (!data.name || !data.price) return alert('شيكي بتقولك لازم تكتبي اسم المنتج والسعر!');
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            btn.disabled = true;
+
+            try {
+                if (docId) await db.collection("products").doc(docId).update(data);
+                else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection("products").add(data);
+                }
+                closeModal();
+            } catch (e) { alert("حصل خطأ يا فندم!"); }
+            btn.innerHTML = `حفظ المنتج`; btn.disabled = false;
+        }
+
+        async function deleteProduct(docId, name) {
+            if (confirm(`شيكي بتتأكد: متأكدة إنك عايزة تمسحي "${name}"؟`)) {
+                await db.collection("products").doc(docId).delete();
+            }
+        }
+
+        /* --- أكواد بانر العروض الجديدة --- */
+        function showOffersModal() { document.getElementById('offersModal').classList.replace('hidden', 'flex'); }
+        function closeOffersModal() { document.getElementById('offersModal').classList.replace('flex', 'hidden'); }
+
+        function renderOffersTable() {
+            const tbody = document.getElementById('offersTableBody');
+            if (bannerOffers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500 font-bold">مفيش عروض في البانر دلوقتي</td></tr>';
+                return;
+            }
+            tbody.innerHTML = bannerOffers.map(o => `
+                <tr class="border-b">
+                    <td class="p-2 w-16"><img src="${o.image}" class="w-12 h-12 rounded object-cover border border-[#C69C6D]"></td>
+                    <td class="p-2 font-bold text-sm">${o.title}<br><span class="text-[#C0392B]">${o.price}</span></td>
+                    <td class="p-2 text-center w-12">
+                        <button onclick="deleteOfferFromBanner('${o.docId}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-lg"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function saveOfferToBanner() {
+            const title = document.getElementById('offerTitle').value.trim();
+            const price = document.getElementById('offerPrice').value.trim();
+            const image = document.getElementById('offerImg').value.trim();
+            const link = document.getElementById('offerLink').value;
+
+            if (!title || !image) return alert('شيكي بتقولك: لازم تكتبي اسم العرض وتحطي الصورة بتاعته!');
+
+            try {
+                await db.collection("banner_offers").add({
+                    title: title,
+                    price: price,
+                    image: image,
+                    link: link,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                document.getElementById('offerTitle').value = '';
+                document.getElementById('offerPrice').value = '';
+                document.getElementById('offerImg').value = '';
+            } catch (e) {
+                alert("حصل خطأ في حفظ العرض!");
+            }
+        }
+
+        async function deleteOfferFromBanner(docId) {
+            if (confirm('متأكدة إنك عايزة تمسحي العرض ده من البانر؟')) {
+                await db.collection("banner_offers").doc(docId).delete();
+            }
+        }
+
+        window.onload = () => { loadProducts(); updateSubCatOptions(); };
+    </script>
+</body>
+</html>

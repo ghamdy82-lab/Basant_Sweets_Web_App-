@@ -1,0 +1,22 @@
+{
+  "name": "حلويات بسنت",
+  "short_name": "بسنت",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFDF9",
+  "theme_color": "#5A1E20",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/qqxXnK85/tsmym-bdwn-ʿnwan.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://i.postimg.cc/qqxXnK85/tsmym-bdwn-ʿnwan.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

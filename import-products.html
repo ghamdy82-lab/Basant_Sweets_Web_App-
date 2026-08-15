@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رفع المنتجات على Firebase</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#FFFDF9] text-[#3A261D] p-6">
+
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl p-8 border border-[#C69C6D]">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-[#5A1E20]">رفع منتجات بسنت على Firebase</h1>
+                <p class="text-gray-600 mt-2">أداة لمرة واحدة - ارفعي كل المنتجات دفعة واحدة</p>
+            </div>
+
+            <div id="status" class="mb-6 p-4 rounded-2xl bg-gray-50 text-center hidden">
+                <!-- Status messages will appear here -->
+            </div>
+
+            <button onclick="uploadAllProducts()" 
+                    class="w-full bg-[#5A1E20] hover:bg-[#7A2E31] text-white font-bold py-4 rounded-2xl text-lg flex items-center justify-center gap-3">
+                <i class="fas fa-upload"></i>
+                <span>رفع كل المنتجات على Firebase</span>
+            </button>
+
+            <div class="mt-6 text-sm text-gray-500 text-center">
+                <p>هذه الأداة سترفع كل المنتجات الموجودة في الكود الأصلي.</p>
+                <p class="mt-1">بعد الانتهاء، افتحي لوحة التحكم مرة أخرى.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Firebase Configuration ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyANnUH5L9bSTBTzwnbiWqZutctrUgGEu8E",
+            authDomain: "mazen-admin.firebaseapp.com",
+            projectId: "mazen-admin",
+            storageBucket: "mazen-admin.firebasestorage.app",
+            messagingSenderId: "841158763037",
+            appId: "1:841158763037:web:e2f4f540135beb01fbdcf4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ==================== Full Products List (from your original code) ====================
+        const productsToUpload = [
+            { id: 152, name: "جاتوه سواريه (12 قطعة - بالحجز)", mainCat: "gateau", subCat: "all_gateau", price: 60, image: "https://i.ibb.co/Jwf675Mh/Whats-App-Image-2026-07-05-at-5-56-26-AM-1.jpg" },
+            { id: 109, name: "تورتة قلب نوتيلا", mainCat: "western", subCat: "torts_28", price: 450, image: "https://i.postimg.cc/1XWSnYcn/Whats-App-Image-2026-07-07-at-5-24-37-AM.jpg" },
+            { id: 1091, name: "تورتة قلب جناش", mainCat: "western", subCat: "torts_28", price: 380, image: "https://i.postimg.cc/MHwHb4Qn/Whats-App-Image-2026-07-07-at-5-24-23-AM.jpg" },
+            { id: 110, name: "تورتة مقاس 28 (نص فاكهة ونص شوكولاتة)", mainCat: "western", subCat: "torts_28", price: 450, image: "https://i.postimg.cc/QMkdNmPB/Whats-App-Image-2026-07-07-at-5-24-58-AM-(3).jpg" },
+            { id: 112, name: "تورتة قلب نص و نص", mainCat: "western", subCat: "torts_28", price: 380, image: "https://i.postimg.cc/tJBStKMM/Whats-App-Image-2026-07-07-at-5-24-09-AM.jpg" },
+            { id: 118, name: "تورتة فاكهة مقاس 24", mainCat: "western", subCat: "torts_24", price: 360, image: "https://i.postimg.cc/RVVfk6Wb/Whats-App-Image-2026-07-07-at-5-24-58-AM-(1).jpg" },
+            { id: 119, name: "تورتة جناش مقاس 24", mainCat: "western", subCat: "torts_24", price: 360, image: "https://i.postimg.cc/PqmPpTL8/Whats-App-Image-2026-07-07-at-5-24-58-AM-(2).jpg" },
+            { id: 120, name: "تورتة بلاك فورست مقاس 24", mainCat: "western", subCat: "torts_24", price: 350, image: "https://i.postimg.cc/NjF6H9YY/Whats-App-Image-2026-07-07-at-5-24-58-AM.jpg" },
+            { id: 121, name: "تورتة نص فاكهة ونص روشيه مقاس 24", mainCat: "western", subCat: "torts_24", price: 360, image: "https://i.postimg.cc/W1TmbWYh/Whats-App-Image-2026-07-07-at-5-24-15-AM.jpg" },
+            { id: 123, name: "تورتة نص فاكهة ونص شيكولاته مقاس 24", mainCat: "western", subCat: "torts_24", price: 360, image: "https://i.postimg.cc/kXrzwCGs/Whats-App-Image-2026-07-07-at-5-24-57-AM.jpg" },
+            { id: 127, name: "تورتة سويس رول نوتيلا مقاس 18", mainCat: "western", subCat: "torts_18", price: 280, image: "https://i.postimg.cc/pd9H9Zpb/Whats-App-Image-2026-07-07-at-5-24-56-AM.jpg" },
+            { id: 132, name: "تورتة روشيه مقاس 18", mainCat: "western", subCat: "torts_18", price: 250, image: "https://i.postimg.cc/WbDCw3s8/Whats-App-Image-2026-07-07-at-5-24-57-AM.jpg" },
+            { id: 134, name: "تورتة نص فاكهة ونص شوكولاتة مقاس 18", mainCat: "western", subCat: "torts_18", price: 250, image: "https://i.postimg.cc/rmWwWWH1/Whats-App-Image-2026-07-12-at-6-44-25-PM.jpg" },
+            { id: 135, name: "سويس رول شوكولاتة مقاس 18", mainCat: "western", subCat: "torts_18", price: 220, image: "https://i.postimg.cc/xCTFJjs5/Whats-App-Image-2026-07-07-at-5-24-57-AM-(1).jpg" },
+            { id: 136, name: "تورتة مانجة مقاس 18", mainCat: "western", subCat: "torts_18", price: 220, image: "https://i.postimg.cc/PxRKCWvk/Whats-App-Image-2026-07-07-at-5-24-57-AM-(2).jpg" },
+            { id: 150, name: "نصف دستة جاتوه", mainCat: "gateau", subCat: "all_gateau", price: 130, image: "https://i.postimg.cc/FH71h0gm/d0d5c9b0-2caa-4512-bfe8-fdbec9df5ae1.jpg" },
+            { id: 1521, name: "نص دستة ميلفى", mainCat: "gateau", subCat: "all_gateau", price: 130, image: "https://i.postimg.cc/kXwtJn0Y/026a3498-d5af-442f-a3af-e9d1cade37c0.jpg" },
+            { id: 204, name: "فورمة بسبوسة بندق كبيرة", mainCat: "oriental", subCat: "all", price: 250, image: "https://i.postimg.cc/wB7MT99V/Whats-App-Image-2026-07-06-at-8-25-39-PM.jpg" },
+            { id: 205, name: "علبة شرقي لوكس (36 قطعة)", mainCat: "oriental", subCat: "all", price: 200, image: "https://i.postimg.cc/PJhdZHkx/Whats-App-Image-2026-07-06-at-8-28-16-PM.jpg" },
+            { id: 206, name: "فورمة بسبوسة سادة كبيرة", mainCat: "oriental", subCat: "all", price: 180, image: "https://i.postimg.cc/28r5LQzw/Whats-App-Image-2026-07-06-at-8-26-41-PM.jpg" },
+            { id: 207, name: "فورمة بسبوسة (وسط)", mainCat: "oriental", subCat: "all", price: 100, image: "https://i.postimg.cc/28r5LQzw/Whats-App-Image-2026-07-06-at-8-26-41-PM.jpg" },
+            { id: 209, name: "بسبوسة بندق (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 95, image: "https://i.postimg.cc/fR5SRHmw/Whats-App-Image-2026-07-06-at-8-09-03-PM.jpg" },
+            { id: 210, name: "طبق شرقي مشكل (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 85, image: "https://i.postimg.cc/Nfnm6CLP/Whats-App-Image-2026-07-07-at-4-32-44-AM.jpg" },
+            { id: 211, name: "فورمة بسبوسة بندق وسط", mainCat: "oriental", subCat: "all", price: 150, image: "https://i.postimg.cc/wB7MT99V/Whats-App-Image-2026-07-06-at-8-25-39-PM.jpg" },
+            { id: 212, name: "زلابية (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 85, image: "https://i.postimg.cc/MpXq1tgX/Whats-App-Image-2026-07-06-at-8-28-48-PM.jpg" },
+            { id: 213, name: "بقلاوة عش مكسرات (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/d0rM9f6y/Whats-App-Image-2026-07-06-at-8-41-08-PM-(1).jpg" },
+            { id: 214, name: "جلاش سادة (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/2SPRhY4G/Whats-App-Image-2026-07-06-at-8-41-08-PM.jpg" },
+            { id: 216, name: "كنافة صوابع (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/d3QzwVYG/Whats-App-Image-2026-07-06-at-8-41-09-PM.jpg" },
+            { id: 217, name: "كنافة بصمة (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/59phpLBt/Whats-App-Image-2026-07-06-at-8-41-09-PM-(1).jpg" },
+            { id: 218, name: "بسبوسة قشطة (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 85, image: "https://i.postimg.cc/bNx2KYvk/Whats-App-Image-2026-07-06-at-8-08-01-PM.jpg" },
+            { id: 219, name: "بسبوسة سادة (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/QdnNzvcz/Whats-App-Image-2026-07-06-at-8-27-44-PM.jpg" },
+            { id: 223, name: "بلح الشام سادة (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/v8zsjpsQ/Whats-App-Image-2026-07-06-at-8-30-31-PM.jpg" },
+            { id: 224, name: "رموش الست (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/yY8Hzv12/Whats-App-Image-2026-07-06-at-8-30-31-PM-(1).jpg" },
+            { id: 225, name: "صوابع زينب (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/761kqRJR/Whats-App-Image-2026-07-06-at-8-29-45-PM.jpg" },
+            { id: 227, name: "كنافة سيخ (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/T35BRsZm/Whats-App-Image-2026-07-06-at-8-41-09-PM-(3).jpg" },
+            { id: 226, name: "كنافة اساور (وزن 450 جرام)", mainCat: "oriental", subCat: "all", price: 75, image: "https://i.postimg.cc/Gh5ZnRS1/Whats-App-Image-2026-07-06-at-8-41-09-PM-(2).jpg" },
+            { id: 250, name: "رز بلبن", mainCat: "oriental", subCat: "all", price: 20, image: "https://i.postimg.cc/s2DQXvw0/Whats-App-Image-2026-07-09-at-3-39-33-PM.jpg" },
+            
+            { id: 301, name: "برجر بلدي", mainCat: "meat", subCat: "kandooz", price: 330, image: "https://i.ibb.co/tM86sBDX/images-1.jpg", isFlexible: true },
+            { id: 302, name: "سجق", mainCat: "meat", subCat: "kandooz", price: 330, image: "https://i.postimg.cc/YqsH3Y15/sjq.jpg", isFlexible: true },
+            { id: 303, name: "مفروم", mainCat: "meat", subCat: "kandooz", price: 330, image: "https://i.postimg.cc/RhfTvXRr/images.jpg", isFlexible: true },
+            { id: 304, name: "خضار ملبس", mainCat: "meat", subCat: "kandooz", price: 360, image: "https://i.ibb.co/Jj2cjsCT/images-3.jpg", isFlexible: true },
+            { id: 305, name: "خضار احمر", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/1YSBshj9/images-13.jpg", isFlexible: true },
+            { id: 306, name: "مفروم أحمر مخصوص", mainCat: "meat", subCat: "kandooz", price: 430, image: "https://i.postimg.cc/RhfTvXRr/images.jpg", isFlexible: true },
+            { id: 307, name: "لحمه سن", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.postimg.cc/43dbYJ5Q/lhmh-sn.jpg", isFlexible: true },
+            { id: 308, name: "لوحه كندوز", mainCat: "meat", subCat: "kandooz", price: 430, image: "https://i.ibb.co/dRqRt03/images-15.jpg", isFlexible: true },
+            { id: 309, name: "كبده كندوز", mainCat: "meat", subCat: "kandooz", price: 430, image: "https://i.postimg.cc/htG7r2dP/kbdh.jpg", isFlexible: true },
+            { id: 310, name: "موزه", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.postimg.cc/hthfxhkx/images-(1).jpg", isFlexible: true },
+            { id: 311, name: "قلب وكلاوي", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/3DM1gYR/images-12.jpg", isFlexible: true },
+            { id: 312, name: "كباب حله", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.postimg.cc/c4VzCm7T/kbab-hlt.jpg", isFlexible: true },
+            { id: 313, name: "وش فخده", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/99yRvx8t/images-16.jpg", isFlexible: true },
+            { id: 314, name: "سمانه", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/99yRvx8t/images-16.jpg", isFlexible: true },
+            { id: 315, name: "كولاته", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.postimg.cc/gc7StDT5/kwlath.jpg", isFlexible: true },
+            { id: 316, name: "بفتيك", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.postimg.cc/8c1CCCdm/bftyk.jpg", isFlexible: true },
+            { id: 317, name: "استيك", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/4n3fHVLT/images-20.jpg", isFlexible: true },
+            { id: 318, name: "انتركوت", mainCat: "meat", subCat: "kandooz", price: 450, image: "https://i.ibb.co/4w4wn4v9/images-18.jpg", isFlexible: true },
+            { id: 319, name: "عرق فلتو", mainCat: "meat", subCat: "kandooz", price: 480, image: "https://i.ibb.co/Df4FrSJk/images-17.jpg", isFlexible: false },
+            { id: 320, name: "عرق بارد", mainCat: "meat", subCat: "kandooz", price: 480, image: "https://i.ibb.co/9kPs5tWC/images-19.jpg", isFlexible: false },
+            { id: 321, name: "كفته حاتي", mainCat: "meat", subCat: "kandooz", price: 330, image: "https://i.ibb.co/xKTMwPGh/images.jpg", isFlexible: true },
+            { id: 322, name: "فخده ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.ibb.co/4wSHbgsk/images-6.jpg", isFlexible: false },
+            { id: 323, name: "كتف ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.ibb.co/gZL4tbXY/images-8.jpg", isFlexible: false },
+            { id: 324, name: "ريش ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.ibb.co/B2DscdWw/images-7.jpg", isFlexible: true },
+            { id: 325, name: "كبده ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.ibb.co/S41nxjWn/images-9.jpg", isFlexible: true },
+            { id: 326, name: "رقبه ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.ibb.co/dsMnqDqY/images-10.jpg", isFlexible: false },
+            { id: 327, name: "ليه ضاني", mainCat: "meat", subCat: "dani", price: 340, image: "https://i.ibb.co/4gPxwjPc/images.jpg", isFlexible: true },
+            { id: 328, name: "طرب ضاني", mainCat: "meat", subCat: "dani", price: 340, image: "https://i.ibb.co/xKTMwPGh/images.jpg", isFlexible: true },
+            { id: 329, name: "مفروم ضاني", mainCat: "meat", subCat: "dani", price: 480, image: "https://i.postimg.cc/jjh38YpH/mfrwm-ahmr.jpg", isFlexible: true },
+            { id: 330, name: "ممبار متنظف", mainCat: "meat", subCat: "fwa2ek", price: 250, image: "https://i.postimg.cc/vTqGHtZG/images-(2).jpg", isFlexible: true },
+            { id: 331, name: "كوارع", mainCat: "meat", subCat: "fwa2ek", price: 380, image: "https://i.postimg.cc/SR5HvTKy/Whats-App-Image-2026-07-09-at-6-48-27-PM-(1).jpg", isFlexible: false },
+            { id: 332, name: "لحمه راس", mainCat: "meat", subCat: "fwa2ek", price: 210, image: "https://i.postimg.cc/9QwjN0bT/lhmt-ras.jpg", isFlexible: false },
+            { id: 333, name: "فشه", mainCat: "meat", subCat: "fwa2ek", price: 180, image: "https://i.postimg.cc/tTXwy4dp/fshh.jpg", isFlexible: true },
+            { id: 334, name: "كرشه", mainCat: "meat", subCat: "fwa2ek", price: 90, image: "https://i.postimg.cc/mgH0yqZ3/krshh.jpg", isFlexible: true },
+            { id: 335, name: "مخ", mainCat: "meat", subCat: "fwa2ek", price: 280, image: "https://i.postimg.cc/sxLNpPtk/mkh.jpg", isFlexible: false },
+            { id: 336, name: "طحال", mainCat: "meat", subCat: "fwa2ek", price: 230, image: "https://i.postimg.cc/W1xs2gzf/thal.jpg", isFlexible: false },
+            { id: 337, name: "لسان", mainCat: "meat", subCat: "fwa2ek", price: 230, image: "https://i.postimg.cc/5y2h52jq/lsan.jpg", isFlexible: false },
+            { id: 338, name: "عكاوي", mainCat: "meat", subCat: "fwa2ek", price: 480, image: "https://i.postimg.cc/y823wJHS/%CA%BFkawy.jpg", isFlexible: false },
+
+            { id: 410, name: "عرض المجمدات (عرض التوفير)", mainCat: "frozen", subCat: "strips", price: 375, image: "https://i.postimg.cc/zDnJsqkV/Whats-App-Image-2026-07-09-at-7-32-17-AM.jpg" },
+            { id: 401, name: "استربس ولعتين", mainCat: "frozen", subCat: "strips", price: 285, image: "https://i.postimg.cc/W3cygFfB/images-(3).jpg" },
+            { id: 402, name: "استربس سوجود", mainCat: "frozen", subCat: "strips", price: 220, image: "https://i.postimg.cc/wxVrRBc1/images-(4).jpg" },
+            { id: 403, name: "استربس أطياب", mainCat: "frozen", subCat: "strips", price: 195, image: "https://i.postimg.cc/T3ZNv5Gc/images-(5).jpg" },
+            { id: 404, name: "استربس نسايم", mainCat: "frozen", subCat: "strips", price: 215, image: "https://i.postimg.cc/RVhg3LZk/images-(6).jpg" },
+            { id: 405, name: "برجر ميتكو (20 قطعه)", mainCat: "frozen", subCat: "burger", price: 230, image: "https://i.postimg.cc/mrfj5xNy/shopping.webp" },
+            { id: 406, name: "برجر جاست (10 قطع)", mainCat: "frozen", subCat: "burger", price: 230, image: "https://i.postimg.cc/t4hPVpDk/Whats-App-Image-2026-07-13-at-12-53-49-AM.jpg" },
+            { id: 407, name: "برجر جاست (20 قطعه)", mainCat: "frozen", subCat: "burger", price: 230, image: "https://i.postimg.cc/pr6YQ3LZ/images-(8).jpg" },
+            { id: 408, name: "كفته جاست", mainCat: "frozen", subCat: "burger", price: 230, image: "https://i.postimg.cc/h4Jfcmp0/Whats-App-Image-2026-07-09-at-7-32-05-PM.jpg" },
+            { id: 409, name: "برجر جاست جبنة", mainCat: "frozen", subCat: "burger", price: 240, image: "https://i.postimg.cc/wjF6hxw2/Whats-App-Image-2026-07-09-at-7-32-04-PM.jpg" },
+            
+            { id: 501, name: "زبدة شرقية جاموسي", mainCat: "grocery", subCat: "all", price: 160, image: "https://i.postimg.cc/JzJcJ6VH/images-(9).jpg" },
+            { id: 502, name: "زبدة شرقية بقري", mainCat: "grocery", subCat: "all", price: 160, image: "https://i.postimg.cc/rsK5pgNg/images-(10).jpg" },
+            { id: 503, name: "زبدة نيوزيلندي", mainCat: "grocery", subCat: "all", price: 120, image: "https://i.postimg.cc/h4HhjGYj/Whats-App-Image-2026-07-09-at-7-35-41-PM.jpg" },
+            { id: 504, name: "بطاطس درجة أولى", mainCat: "grocery", subCat: "all", price: 145, image: "https://i.postimg.cc/BvYnGZDW/Whats-App-Image-2026-07-09-at-7-35-43-PM.jpg" },
+            { id: 505, name: "كيلو موتزاريلا الحريف", mainCat: "grocery", subCat: "all", price: 195, image: "https://i.postimg.cc/7Zg0b50J/images-(11).jpg" },
+            { id: 506, name: "نصف كيلو موتزاريلا الحمد", mainCat: "grocery", subCat: "all", price: 80, image: "https://i.postimg.cc/LX0ZGLFK/images-(12).jpg" },
+            { id: 507, name: "نصف كيلو ميكس الحمد", mainCat: "grocery", subCat: "all", price: 75, image: "https://i.postimg.cc/fyHKc90Q/images-(13).jpg" },
+            { id: 508, name: "تركي مدخن (نصف كيلو)", mainCat: "grocery", subCat: "all", price: 140, image: "https://i.postimg.cc/65yLsTvX/Whats-App-Image-2026-07-09-at-7-35-42-PM.jpg " },
+            { id: 509, name: "بسطرمة (ربع كيلو)", mainCat: "grocery", subCat: "all", price: 115, image: "https://i.postimg.cc/rwTm1PMw/Whats-App-Image-2026-07-09-at-7-35-41-PM-(1).jpg" },
+            { id: 510, name: "كريمة لباني (نصف كيلو)", mainCat: "grocery", subCat: "all", price: 65, image: "https://i.postimg.cc/ryG7dnnj/images-(19).jpg" },
+            { id: 511, name: "زيتون السرياني (كيلو)", mainCat: "grocery", subCat: "all", price: 90, image: "https://i.postimg.cc/JzSpYZ66/images-(14).jpg" },
+            
+            { id: 601, name: "كيلو باربيكيو لافيستا", mainCat: "sauces", subCat: "all", price: 75, image: "https://i.ibb.co/Df2Ppbyc/Whats-App-Image-2026-07-06-at-4-18-53-PM-3.jpg" },
+            { id: 602, name: "كيلو مستردة لافيستا", mainCat: "sauces", subCat: "all", price: 75, image: "https://i.ibb.co/1JnjrWSd/Whats-App-Image-2026-07-06-at-4-18-52-PM-2.jpg" },
+            { id: 603, name: "كيلو كاتشب لافيستا", mainCat: "sauces", subCat: "all", price: 65, image: "https://i.ibb.co/5gq31QYY/Whats-App-Image-2026-07-06-at-4-18-52-PM-1.jpg" },
+            { id: 604, name: "صوص الشيدر", mainCat: "sauces", subCat: "all", price: 65, image: "https://i.ibb.co/fzsFj8Vz/Whats-App-Image-2026-07-06-at-4-18-52-PM.jpg" },
+            { id: 605, name: "نصف كيلو طحينة", mainCat: "sauces", subCat: "all", price: 70, image: "https://i.ibb.co/xtCMSQYc/Whats-App-Image-2026-07-06-at-4-18-53-PM-1.jpg" },
+            { id: 607, name: "كاتشب الحريف (كيلو)", mainCat: "sauces", subCat: "all", price: 65, image: "https://i.ibb.co/FLbdJrJd/Whats-App-Image-2026-07-06-at-4-18-53-PM-4.jpg" },
+            { id: 608, name: "مايونيز فريش (400 جم)", mainCat: "sauces", subCat: "all", price: 60, image: "https://i.ibb.co/7NxMJ2tS/Whats-App-Image-2026-07-06-at-4-18-52-PM-3.jpg" },
+            { id: 609, name: "مرقة الدجاج فريش", mainCat: "sauces", subCat: "all", price: 25, image: "https://i.ibb.co/0pFnfMMM/Whats-App-Image-2026-07-06-at-4-18-53-PM-2.jpg" },
+            { id: 610, name: "كاتشب فريش", mainCat: "sauces", subCat: "all", price: 40, image: "https://i.ibb.co/Q7610tFS/Whats-App-Image-2026-07-06-at-4-18-53-PM.jpg" },
+            
+            { id: 701, name: "مقرمشات (نصف كيلو)", mainCat: "tasali", subCat: "all", price: 65, image: "https://i.postimg.cc/mrgFK5Hk/Whats-App-Image-2026-07-12-at-6-38-14-PM.jpg" },
+            { id: 702, name: "شوكولاتة ماكس تيلا (كيلو)", mainCat: "tasali", subCat: "all", price: 145, image: "https://i.postimg.cc/bwzG2BLp/Whats-App-Image-2026-07-12-at-6-39-00-PM.jpg" },
+            { id: 703, name: "شوكولاتة كارما تيلا (800 جم)", mainCat: "tasali", subCat: "all", price: 95, image: "https://i.postimg.cc/wM8Mxf7v/Whats-App-Image-2026-07-12-at-6-39-00-PM-(1).jpg" },
+            { id: 704, name: "مكسرات (ربع كيلو)", mainCat: "tasali", subCat: "all", price: 175, image: "https://i.ibb.co/TqgCj4qr/Whats-App-Image-2026-07-06-at-7-02-37-PM.jpg" },
+            { id: 705, name: "كاندي (ربع كيلو)", mainCat: "tasali", subCat: "all", price: 60, image: "https://i.postimg.cc/RFvbr9L8/Whats-App-Image-2026-07-12-at-6-44-37-PM.jpg" },
+            { id: 706, name: "شيكوبون (ربع كيلو)", mainCat: "tasali", subCat: "all", price: 40, image: "https://i.ibb.co/SDv6fcqt/Whats-App-Image-2026-07-06-at-4-23-51-PM-1.jpg" },
+            { id: 707, name: "نسكافيه برليكو", mainCat: "tasali", subCat: "all", price: 60, image: "https://i.ibb.co/csSRX7v/Whats-App-Image-2026-07-06-at-4-23-51-PM.jpg" },
+            { id: 708, name: "كايزر ماك", mainCat: "tasali", subCat: "all", price: 115, image: "https://i.ibb.co/zh9WWZmM/Whats-App-Image-2026-07-06-at-4-25-23-PM.jpg" },
+     
+            { id: 807, name: "تورتة مقاس 18 وطبق شرقي (بالحجز)", mainCat: "special_offers", subCat: "all", price: 335, image: "https://i.postimg.cc/4NgPcX7X/Whats-App-Image-2026-07-10-at-3-29-46-AM.jpg" },
+            { id: 801, name: "عرض التوابل (مكون من 10 أنواع توابل)", mainCat: "special_offers", subCat: "all", price: 115, image: "https://i.ibb.co/ymMRHjjw/Whats-App-Image-2026-07-06-at-4-38-38-PM.jpg" },
+            { id: 802, name: "عرض الطيبات (3 صوصات: دبس رمان + صويا صوص + باربيكيو)", mainCat: "special_offers", subCat: "all", price: 115, image: "https://i.ibb.co/XZP0NkVw/Whats-App-Image-2026-07-06-at-7-17-12-PM.jpg" },
+            { id: 803, name: "عرض تونة توليدو مفتتة (4 قطع)", mainCat: "special_offers", subCat: "all", price: 130, image: "https://i.ibb.co/svWhcYhd/Whats-App-Image-2026-07-06-at-4-36-44-PM.jpg" },
+            { id: 804, name: "عرض تونة توليدو قطع (3 قطع)", mainCat: "special_offers", subCat: "all", price: 145, image: "https://i.ibb.co/DHFwcXQB/Whats-App-Image-2026-07-06-at-4-37-24-PM.jpg" },
+            { id: 805, name: "فطير بونيتا بالزبدة النيوزلاندي (صغير)", mainCat: "special_offers", subCat: "all", price: 30, image: "https://i.ibb.co/tW5cRT4/Whats-App-Image-2026-07-05-at-5-56-26-AM.jpg" },
+            { id: 806, name: "فطير بونيتا بالزبدة النيوزلاندي (كبير)", mainCat: "special_offers", subCat: "all", price: 65, image: "https://i.ibb.co/tW5cRT4/Whats-App-Image-2026-07-05-at-5-56-26-AM.jpg" }
+        ];
+
+        async function uploadAllProducts() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = `
+                <div class="flex items-center justify-center gap-3">
+                    <i class="fas fa-spinner fa-spin text-2xl text-[#C69C6D]"></i>
+                    <span class="font-bold">جاري رفع المنتجات... (0/${productsToUpload.length})</span>
+                </div>
+            `;
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < productsToUpload.length; i++) {
+                const product = productsToUpload[i];
+                
+                try {
+                    // Remove the numeric id since Firestore will generate its own
+                    const { id, ...productData } = product;
+                    
+                    await db.collection("products").add(productData);
+                    successCount++;
+                    
+                    // Update status every 5 products
+                    if ((i + 1) % 5 === 0 || i === productsToUpload.length - 1) {
+                        statusDiv.innerHTML = `
+                            <div class="flex items-center justify-center gap-3">
+                                <i class="fas fa-spinner fa-spin text-2xl text-[#C69C6D]"></i>
+                                <span class="font-bold">جاري الرفع... (${successCount}/${productsToUpload.length})</span>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error("Error uploading product:", product.name, error);
+                    errorCount++;
+                }
+            }
+
+            // Final status
+            if (errorCount === 0) {
+                statusDiv.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
+                        <p class="font-bold text-lg text-green-600">تم رفع ${successCount} منتج بنجاح! 🎉</p>
+                        <p class="text-sm mt-2">افتحي لوحة التحكم الآن.</p>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-orange-500 mb-3"></i>
+                        <p class="font-bold">تم رفع ${successCount} منتج</p>
+                        <p class="text-red-600">فشل رفع ${errorCount} منتج</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
