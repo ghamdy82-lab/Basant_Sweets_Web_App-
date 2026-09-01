@@ -20,7 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* إصلاح مشكلة ظهور آخر أزرار السايدبار */
         .sidebar { height: 100vh !important; padding-bottom: 70px; }
         .sidebar-menu { padding-bottom: 100px !important; overflow-y: auto !important; }
         
@@ -50,13 +49,32 @@
         .header-side { display: flex; gap: 10px; align-items: center; flex: 1; }
         
         .logo-container { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 2; }
-        .logo-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; background: white; }
+        .logo-img { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; background: white; }
         .logo-text { color: var(--gold-light); font-size: 0.75rem; font-weight: 700; margin-top: 3px; line-height: 1.2; }
 
         .icon-btn { background: var(--gold); color: var(--primary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: none; cursor: pointer; position: relative; transition: transform 0.2s; }
         .icon-btn:active { transform: scale(0.9); }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .points-btn { background: #f1c40f; color: var(--primary); }
+
+        /* زر تثبيت التطبيق المنسق */
+        .install-btn {
+            background: var(--gold);
+            color: var(--primary);
+            border: none;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .install-btn:active { transform: scale(0.95); }
 
         .delivery-notice { background: var(--gold-light); color: var(--primary); padding: 6px; text-align: center; font-weight: 700; font-size: 0.85rem; }
 
@@ -77,19 +95,14 @@
         .sidebar-btn.active i, .sidebar-btn:hover i { color: var(--gold-light); }
         .special-offer-btn-side { background: var(--danger) !important; color: white !important; }
         .special-offer-btn-side i { color: #f1c40f !important; }
-        .account-btn-side { background: var(--gold-light) !important; color: var(--primary) !important; border-color: var(--gold) !important; margin-bottom: 10px; }
-        .account-btn-side i { color: var(--primary) !important; }
 
         .container { max-width: 1200px; margin: 0 auto; padding: 10px 15px 20px; flex: 1; width: 100%; }
 
-        .sub-tabs-wrapper { position: sticky; top: 92px; background: var(--bg); z-index: 990; padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .sub-tabs-wrapper { position: sticky; top: 75px; background: var(--bg); z-index: 990; padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px; }
         .sub-tabs { display: none; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; width: 100%; }
         .sub-tabs.show-tabs { display: grid; }
         .sub-tab-btn { background: white; border: 1px solid var(--gold); color: var(--primary); padding: 8px 5px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; line-height: 1.2; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .sub-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
-        .sub-cat-desc { background: #fff8f0; border: 2px dashed var(--gold); padding: 12px; border-radius: 12px; text-align: center; margin: 0 auto 15px; max-width: 95%; font-size: 0.9rem; font-weight: bold; color: var(--primary); }
-        .whatsapp-link-btn { display: inline-block; background: #25D366; color: white; padding: 6px 15px; border-radius: 20px; text-decoration: none; margin-top: 5px; }
 
         .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border: 1px solid #eee; display: flex; flex-direction: column; transition: all 0.3s ease; }
@@ -119,7 +132,8 @@
         .del-btn { width: 100%; padding: 12px; border: 2px solid #ccc; background: white; border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; font-size: 0.9rem; transition: 0.2s; }
         .del-btn.selected { border-color: var(--success); background: #e8f5e9; color: var(--success); }
         .map-link-btn { display: block; text-align: center; background: #e8f0fe; color: #1a73e8; border: 1px solid #aecbfa; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; transition: 0.2s; }
-        .map-link-btn:hover { background: #d2e3fc; }
+
+        .add-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-family: inherit; font-size: 1rem; }
 
         .sticky-cart {
             position: fixed; top: 75px; left: 15px; z-index: 900;
@@ -130,7 +144,6 @@
             transition: all 0.3s ease; display: none; 
             align-items: center; justify-content: center;
         }
-        .sticky-cart:hover { transform: scale(1.1); }
         .sticky-cart-badge {
             position: absolute; top: -5px; right: -5px;
             background: var(--danger); color: white;
@@ -167,12 +180,7 @@
         .toast.error { background: var(--danger); }
         
         .offers-banner { background: #fff; padding: 10px; text-align: center; border-bottom: 2px solid var(--gold-light); }
-        .offers-scroll { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 8px; 
-            padding: 5px; 
-        }
+        .offers-scroll { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 5px; }
         @keyframes glowEffect { 0% { box-shadow: 0 0 5px rgba(198, 156, 109, 0.4); border-color: var(--gold-light); } 100% { box-shadow: 0 0 10px rgba(198, 156, 109, 0.8); border-color: var(--gold); } }
         .offer-card { background: var(--bg); border-radius: 8px; border: 2px solid var(--gold); overflow: hidden; display: flex; flex-direction: column; animation: glowEffect 1.5s infinite alternate; }
         .offer-card img { width: 100%; height: 75px; object-fit: cover; border-bottom: 1px solid var(--gold-light); }
@@ -197,13 +205,10 @@
         .footer { background: var(--primary); color: var(--gold-light); text-align: center; padding: 30px 15px 15px; margin-top: 30px; border-top: 5px solid var(--gold); }
         .footer h3 { color: white; margin-bottom: 10px; font-size: 1.2rem; }
         .footer p { margin-bottom: 5px; font-size: 0.85rem; color: #f5f5f5; }
-        .footer .social-icons { margin: 15px 0; font-size: 1.2rem; }
-        .footer .social-icons i { margin: 0 10px; color: var(--gold); cursor: pointer; }
         .footer .copyright { margin-top: 20px; font-size: 0.7rem; color: var(--gold-light); opacity: 0.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; direction: ltr; }
 
         .edit-data-btn { background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; font-family: inherit; margin-top: 5px; font-weight: bold; font-size: 0.85rem; }
     </style>
-<base target="_blank">
 </head>
 <body>
 
@@ -217,13 +222,15 @@
         <span id="toastMsg">رسالة</span>
     </div>
 
+    <!-- الهيدر المظبوط مع زر التثبيت -->
     <header class="header">
         <div class="header-side">
             <button class="icon-btn" onclick="toggleSidebar()" title="الأقسام">
                 <i class="fas fa-bars"></i>
             </button>
-            <button class="icon-btn" onclick="openOrders()" title="طلباتي" style="width:35px; height:35px; font-size:1rem; display:none;">
-                <i class="fas fa-clipboard-list"></i>
+            <button id="pwaInstallBtn" class="install-btn" title="تثبيت التطبيق">
+                <i class="fas fa-download"></i>
+                <span>تثبيت</span>
             </button>
         </div>
         
@@ -236,10 +243,6 @@
             <button class="icon-btn points-btn" onclick="openPointsModal()" title="نظام المكافآت">
                 <i class="fas fa-star"></i>
             </button>
-            <button class="icon-btn" onclick="openCart()" title="السلة" style="display:none;">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count" id="cartCount">0</span>
-            </button>
         </div>
     </header>
 
@@ -249,38 +252,38 @@
             <span>القائمة والأقسام</span>
             <button onclick="toggleSidebar()">×</button>
         </div>
-     <div class="sidebar-menu" id="sidebarMenu">
-   
-    <button class="sidebar-btn active" onclick="setMainCat('western', this); toggleSidebar();">
-        <i class="fas fa-birthday-cake"></i> حلويات غربية
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('gateau', this); toggleSidebar();">
-        <i class="fas fa-layer-group"></i> جاتوهات
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('oriental', this); toggleSidebar();">
-        <i class="fas fa-moon"></i> حلويات شرقية
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('meat', this); toggleSidebar();">
-        <i class="fas fa-drumstick-bite"></i> لحوم بلدي
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('frozen', this); toggleSidebar();">
-        <i class="fas fa-snowflake"></i> مجمدات
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('grocery', this); toggleSidebar();">
-        <i class="fas fa-cheese"></i> بقالة وأجبان
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('sauces', this); toggleSidebar();">
-        <i class="fas fa-pepper-hot"></i> صوصات
-    </button>
-    <button class="sidebar-btn" onclick="setMainCat('tasali', this); toggleSidebar();">
-        <i class="fas fa-cookie"></i> تسالي ومشروبات
-    </button>
-    <button class="sidebar-btn special-offer-btn-side" onclick="setMainCat('special_offers', this); toggleSidebar();">
-        <i class="fas fa-gift"></i> عروض خاصة
-    </button>
-</div> 
+        <div class="sidebar-menu" id="sidebarMenu">
+            <button class="sidebar-btn active" onclick="setMainCat('western', this); toggleSidebar();">
+                <i class="fas fa-birthday-cake"></i> حلويات غربية
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('gateau', this); toggleSidebar();">
+                <i class="fas fa-layer-group"></i> جاتوهات
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('oriental', this); toggleSidebar();">
+                <i class="fas fa-moon"></i> حلويات شرقية
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('meat', this); toggleSidebar();">
+                <i class="fas fa-drumstick-bite"></i> لحوم بلدي
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('frozen', this); toggleSidebar();">
+                <i class="fas fa-snowflake"></i> مجمدات
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('grocery', this); toggleSidebar();">
+                <i class="fas fa-cheese"></i> بقالة وأجبان
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('sauces', this); toggleSidebar();">
+                <i class="fas fa-pepper-hot"></i> صصوصات
+            </button>
+            <button class="sidebar-btn" onclick="setMainCat('tasali', this); toggleSidebar();">
+                <i class="fas fa-cookie"></i> تسالي ومشروبات
+            </button>
+            <button class="sidebar-btn special-offer-btn-side" onclick="setMainCat('special_offers', this); toggleSidebar();">
+                <i class="fas fa-gift"></i> عروض خاصة
+            </button>
+        </div> 
     </div>
 
+    <!-- نافذة تسجيل البيانات -->
     <div class="modal" id="accountModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -296,6 +299,7 @@
         </div>
     </div>
 
+    <!-- نافذة النقاط -->
     <div class="modal" id="pointsModal">
         <div class="modal-content" style="max-width: 350px; text-align: center;">
             <div class="modal-header">
@@ -327,12 +331,9 @@
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث عن منتج..." onkeyup="searchProducts()">
     </div>
 
-    <!-- ده الجزء الجديد اللي بيسحب البانر أوتوماتيك من المخزن -->
     <div class="offers-banner" id="mainOffersBannerSection" style="display: none;">
         <h3 style="color:var(--danger); font-weight:800; font-size:1rem; margin:5px 0 10px;">🔥 عروض الأسبوع 🔥</h3>
-        <div class="offers-scroll" id="dynamicOffersBanner">
-            <!-- العروض هتنزل هنا -->
-        </div>
+        <div class="offers-scroll" id="dynamicOffersBanner"></div>
     </div>
 
     <div class="container">
@@ -340,9 +341,6 @@
             <h2 id="catTitle" style="text-align:center; color:var(--primary); margin:0 0 10px; font-size:1.1rem;">🎂 حلويات غربية</h2>
             <div class="sub-tabs" id="subTabs"></div>
         </div>
-
-        <div id="subCatDesc" class="sub-cat-desc" style="display:none;"></div>
-        <div id="loadingSheet" style="text-align: center; color: var(--primary); display:none; margin-bottom:10px;">🔄 جاري التحديث...</div>
 
         <div class="products-grid" id="productsGrid"></div>
     </div>
@@ -371,9 +369,8 @@
         <div class="reviews-scroll" id="reviewsScroll"></div>
         <div style="text-align: center; margin-top: 15px;">
             <button class="add-btn" style="width: auto; padding: 8px 20px;" onclick="openReviewModal()">
-    <i class="fas fa-star"></i> أضف تقييمك
-</button>
-           
+                <i class="fas fa-star"></i> أضف تقييمك
+            </button>
         </div>
     </section>
 
@@ -386,6 +383,7 @@
         </div>
     </footer>
 
+    <!-- نافذة إضافة تقييم -->
     <div class="modal" id="reviewModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -411,6 +409,7 @@
         </div>
     </div>
 
+    <!-- نافذة السلة -->
     <div class="modal" id="cartModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -465,6 +464,7 @@
         </div>
     </div>
 
+    <!-- نافذة طلباتي -->
     <div class="modal" id="ordersModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -480,22 +480,19 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // ==================== Firebase Configuration ====================
+        // ==================== إعدادات Firebase ====================
         const firebaseConfig = {
             apiKey: "AIzaSyANnUH5L9bSTBTzwnbiWqZutctrUgGEu8E",
             authDomain: "mazen-admin.firebaseapp.com",
             projectId: "mazen-admin",
             storageBucket: "mazen-admin.firebasestorage.app",
             messagingSenderId: "841158763037",
-            appId: "1:841158763037:web:e2f4f540135beb01fbdcf4",
-            measurementId: "G-YCMNZFV74Y"
+            appId: "1:841158763037:web:e2f4f540135beb01fbdcf4"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        console.log("✅ تم ربط Firebase بنجاح");
 
-        // ==================== Global Variables ====================
         let productsData = [];
         let cart = JSON.parse(localStorage.getItem('basentCart')) || [];
         let orders = JSON.parse(localStorage.getItem('basentOrders')) || [];
@@ -504,30 +501,25 @@
         let currentSubCat = 'torts_28';
 
         const subCategories = {
-            western: [ { id: "torts_28", name: "مقاس 28 وقلب" }, { id: "torts_24", name: "تورت 24" }, { id: "torts_18", name: "تورت 18" }, { id: "torts_large", name: "تورت خاصة" } ],
+            western: [ { id: "torts_28", name: "مقاس 28 وقلب" }, { id: "torts_24", name: "تورت 24" }, { id: "torts_18", name: "تورت 18" } ],
             gateau: [ { id: "all_gateau", name: "كل الجاتوهات" } ],
-            meat: [ { id: "dani", name: "لحوم ضاني" }, { id: "kandooz", name: "لحوم كندوز" }, { id: "fwa2ek", name: "فواكه اللحوم" } ],
+            oriental: [ { id: "all", name: "كل الحلويات الشرقية" } ],
+            meat: [ { id: "kandooz", name: "لحوم كندوز" }, { id: "dani", name: "لحوم ضاني" }, { id: "fwa2ek", name: "فواكه اللحوم" } ],
             frozen: [ { id: "strips", name: "استربس" }, { id: "burger", name: "برجر وكفتة" } ]
         };
 
-        // ==================== Load Products from Firebase ====================
         function loadProductsFromFirebase() {
             db.collection("products").onSnapshot((snapshot) => {
                 productsData = [];
                 snapshot.forEach((doc) => {
-                    productsData.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
+                    productsData.push({ id: doc.id, ...doc.data() });
                 });
                 renderProducts();
             }, (error) => {
                 console.error("خطأ في تحميل المنتجات:", error);
-                showToast("حصل خطأ في تحميل المنتجات", "error");
             });
         }
 
-        // ==================== برمجة شيكي لتحميل العروض أوتوماتيك ====================
         function loadOffersFromFirebase() {
             db.collection("banner_offers").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
                 const bannerDiv = document.getElementById('dynamicOffersBanner');
@@ -538,7 +530,7 @@
                 snapshot.forEach((doc) => offers.push(doc.data()));
 
                 if (offers.length === 0) {
-                    sectionDiv.style.display = 'none'; // لو مفيش عروض نخفي البانر خالص
+                    sectionDiv.style.display = 'none';
                     return;
                 }
 
@@ -552,13 +544,9 @@
                         </div>
                     </div>
                 `).join('');
-                
-            }, (error) => {
-                console.error("خطأ في تحميل العروض:", error);
             });
         }
 
-        // ==================== Original Functions ====================
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toastBox');
             const icon = document.getElementById('toastIcon');
@@ -600,7 +588,8 @@
             document.getElementById('accSuccess').style.display = 'none';
         }
 
-        function saveAccountData() {
+        // ==================== تم إصلاح دالة حفظ البيانات وربطها بالفايربيز ====================
+        async function saveAccountData() {
             const n = document.getElementById('accName').value.trim();
             const p = document.getElementById('accPhone').value.trim();
             const a = document.getElementById('accAddress').value.trim();
@@ -611,6 +600,19 @@
             localStorage.setItem('bPhone', p);
             localStorage.setItem('bAddress', a);
             
+            try {
+                let currentPoints = parseInt(localStorage.getItem('basentTotalPoints')) || 0;
+                await db.collection("customers").doc(p).set({
+                    name: n,
+                    phone: p,
+                    address: a || "لم يسجل عنوان",
+                    points: currentPoints,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error("خطأ في الفايربيز:", e);
+            }
+
             document.getElementById('accSuccess').style.display = 'block';
             setTimeout(() => { goHome(); }, 1500);
         }
@@ -690,10 +692,7 @@
                 <div class="cart-item">
                     <div>
                         <div style="font-weight:bold; color:var(--primary); font-size:0.9rem;">${item.name}</div>
-                        <div style="color:var(--text); font-size:0.85rem;">
-                            ${item.price * item.qty} ج 
-                            ${item.isFlexible ? `<br><span style="font-size:0.7rem;color:var(--gold);">(سعر الكيلو ${item.price} ج)</span>` : ''}
-                        </div>
+                        <div style="color:var(--text); font-size:0.85rem;">${item.price * item.qty} ج</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <button class="qty-btn" onclick="updateQtyInCart('${item.id}', 1)">+</button>
@@ -762,7 +761,7 @@
             renderCart();
         }
 
-        function sendOrder() {
+        async function sendOrder() {
             const name = localStorage.getItem('bName');
             const phone = localStorage.getItem('bPhone');
             const address = localStorage.getItem('bAddress');
@@ -795,6 +794,17 @@
                 newTotalPoints -= 200;
             }
             localStorage.setItem('basentTotalPoints', newTotalPoints);
+
+            // تحديث النقاط في الفايربيز
+            try {
+                await db.collection("customers").doc(phone).set({
+                    name: name,
+                    phone: phone,
+                    address: address || "لم يسجل عنوان",
+                    points: newTotalPoints,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch(err) {}
 
             let orderText = `🆕 *طلب جديد من بسنت*\n\n👤 الاسم: ${name}\n📱 الموبايل: ${phone}\n`;
             if (selectedDeliveryType === 'توصيل للمنزل') orderText += `📍 العنوان: ${address}\n🏙 المنطقة: ${areaName}\n`;
@@ -938,9 +948,8 @@
         }
 
         function init() {
-            // هنا بننده على الوظايف اللي بتسحب الداتا أول ما الموقع يفتح
             loadProductsFromFirebase();
-            loadOffersFromFirebase(); // سطر شيكي الجديد
+            loadOffersFromFirebase();
             updateCartIcon();
             
             setTimeout(() => {
@@ -1022,6 +1031,38 @@
         });
 
         window.onload = init;
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        // تفعيل زر التثبيت
+        let deferredPrompt;
+        const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (pwaInstallBtn) pwaInstallBtn.style.display = 'inline-flex';
+        });
+
+        if (pwaInstallBtn) {
+            pwaInstallBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        pwaInstallBtn.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (pwaInstallBtn) pwaInstallBtn.style.display = 'none';
+            showToast('تم تثبيت التطبيق بنجاح!', 'success');
+        });
     </script>
 </body>
 </html>
