@@ -5,7 +5,7 @@
 A complete e-commerce web application and management system built for a local dessert and products business, featuring a customer storefront and a secure admin dashboard.
 
 ## 🚀 Live Demo
-* **App Link:** [https://indexhtml-liard-seven.vercel.app/]
+* **App Link:** [https://mazen-admin.web.app/]
 ## ✨ Key Features
 * **Customer Storefront:** An engaging and responsive UI/UX for browsing products and placing orders.
 * **Admin Dashboard:** A secure control panel for the business owner to manage inventory and track orders.
