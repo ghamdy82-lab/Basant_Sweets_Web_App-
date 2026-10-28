@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم لقمة و بسبوسة - تصميم شيكي</title>
+    <!-- خط الموقع -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #FFFDF9; }
+        .table-row:hover { background-color: #fff8f0; }
+        .modal { animation: fadeInScale 0.2s ease forwards; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 2px solid #C69C6D; background-color: white; }
+        
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #C69C6D; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-[#3A261D]">
+
+    <!-- شاشة تسجيل الدخول المربوطة بالفايربيز -->
+    <div id="loginGate" class="fixed inset-0 bg-[#5A1E20] z-[10000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border-2 border-[#C69C6D]">
+            <!-- اللوجو الجديد -->
+            <img src="https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg" class="w-20 h-20 rounded-full mx-auto mb-4 border-2 border-[#C69C6D] object-cover bg-white" alt="لقمة و بسبوسة">
+            <h2 class="text-2xl font-bold text-[#5A1E20] mb-2">لوحة تحكم لقمة و بسبوسة</h2>
+            <p class="text-xs text-gray-500 mb-6 font-bold">تسجيل الدخول للمدير</p>
+            
+            <input type="email" id="adminEmail" placeholder="البريد الإلكتروني..." class="w-full px-4 py-3 border-2 border-[#C69C6D] rounded-2xl mb-3 text-right text-sm outline-none focus:border-[#5A1E20]" dir="ltr">
+            <input type="password" id="adminPassInput" placeholder="الرقم السري..." class="w-full px-4 py-3 border-2 border-[#C69C6D] rounded-2xl mb-4 text-center text-lg outline-none focus:border-[#5A1E20]">
+            
+            <button onclick="adminLogin()" id="loginBtn" class="w-full bg-[#5A1E20] hover:bg-[#7A2E31] text-white font-bold py-3 rounded-2xl transition-colors">دخول للوحة التحكم</button>
+            <p id="loginError" class="text-red-500 text-xs mt-3 font-bold hidden">بيانات الدخول غير صحيحة!</p>
+        </div>
+    </div>
+
+    <!-- الهيدر -->
+    <div class="bg-[#5A1E20] text-white py-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <!-- اللوجو الجديد في الهيدر -->
+                <img src="https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-[#C69C6D] object-cover bg-white" alt="لقمة و بسبوسة">
+                <div>
+                    <h1 class="text-xl md:text-3xl font-bold">لوحة تحكم لقمة و بسبوسة</h1>
+                    <p class="text-[#C69C6D] text-xs md:text-sm flex items-center gap-2">
+                        <i class="fas fa-star"></i> 
+            تم التصميم والتطوير بواسطة Taghreed Hamdy
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm flex items-center gap-2">
+                    <i class="fas fa-sync fa-spin text-[#C69C6D]"></i>
+                    <span id="syncStatus">متصلة</span>
+                </div>
+                <button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl text-xs md:text-sm text-white flex items-center gap-2 transition-colors border border-red-500">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
+
+        <!-- الفلاتر والزراير -->
+        <div class="flex flex-col md:flex-row gap-4 mb-6 md:items-end">
+            <div class="flex-1 w-full">
+                <input type="text" id="searchInput" placeholder="🔍 ابحثي باسم المنتج يا بسنت..." 
+                       class="w-full px-5 py-3 border-2 border-[#C69C6D] rounded-2xl focus:outline-none focus:border-[#5A1E20] shadow-sm"
+                       onkeyup="filterTable()">
+            </div>
+            <div class="w-full md:w-auto">
+                <select id="categoryFilter" onchange="filterTable()" 
+                        class="w-full md:w-auto px-5 py-3 border-2 border-[#C69C6D] rounded-2xl focus:outline-none focus:border-[#5A1E20] bg-white shadow-sm">
+                    <option value="">كل الأقسام</option>
+                </select>
+            </div>
+
+            <!-- زرار إدارة العملاء والنقاط -->
+            <button onclick="showCustomersModal()" 
+                    class="w-full md:w-auto bg-[#27AE60] hover:bg-[#219150] transition-colors text-white font-bold px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-users"></i>
+                <span>العملاء والنقاط</span>
+            </button>
+            
+            <!-- زرار إضافة قسم جديد -->
+            <button onclick="showCategoryModal()" 
+                    class="w-full md:w-auto bg-[#8E44AD] hover:bg-[#7D3C98] transition-colors text-white font-bold px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-folder-plus"></i>
+                <span>إضافة قسم جديد</span>
+            </button>
+            <button onclick="showManageCategoriesModal()" class="w-full md:w-auto bg-[#2980B9] hover:bg-[#2471A3] transition-colors text-white font-bold px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-list"></i>
+                <span>إدارة الأقسام</span>
+            </button>
+            
+            <!-- زرار إدارة بانر العروض -->
+            <button onclick="showOffersModal()" 
+                    class="w-full md:w-auto bg-[#C0392B] hover:bg-[#A93226] transition-colors text-white font-bold px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-fire"></i>
+                <span>بانر العروض</span>
+            </button>
+
+            <!-- زرار إضافة منتج -->
+            <button onclick="showAddModal()" 
+                    class="w-full md:w-auto bg-[#5A1E20] hover:bg-[#7A2E31] transition-colors text-white font-bold px-5 py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-plus"></i>
+                <span>إضافة منتج</span>
+            </button>
+        </div>
+
+        <!-- جدول المنتجات -->
+        <div class="bg-white rounded-3xl shadow-xl border border-[#C69C6D]/30 overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full min-w-[700px] md:min-w-[900px]">
+                    <thead class="bg-[#5A1E20] text-white">
+                        <tr>
+                            <th class="px-4 py-4 text-right font-bold w-20">الصورة</th>
+                            <th class="px-4 py-4 text-right font-bold">اسم المنتج</th>
+                            <th class="px-4 py-4 text-right font-bold">القسم</th>
+                            <th class="px-4 py-4 text-center font-bold">السعر</th>
+                            <th class="px-4 py-4 text-center font-bold">بالكيلو؟</th>
+                            <th class="px-4 py-4 text-center font-bold">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable" class="divide-y divide-gray-100 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-4 text-sm text-gray-500 font-bold">
+            إجمالي المنتجات: <span id="totalCount" class="text-[#5A1E20] text-lg">0</span>
+        </div>
+    </div>
+
+    <!-- شاشة إدارة العملاء والنقاط -->
+    <div id="customersModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-3xl modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#27AE60] text-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-xl flex items-center gap-2">
+                    <i class="fas fa-users"></i>
+                    <span>قاعدة بيانات العملاء والنقاط السحابية</span>
+                </h3>
+                <button onclick="closeCustomersModal()" class="text-3xl leading-none hover:text-gray-200">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <div class="border rounded-2xl overflow-hidden shadow-sm">
+                    <table class="w-full text-sm">
+                        <thead class="bg-[#f0fdf4] text-[#27AE60] font-bold">
+                            <tr>
+                                <th class="p-3 text-right">اسم العميل</th>
+                                <th class="p-3 text-right">رقم الموبايل</th>
+                                <th class="p-3 text-right">العنوان</th>
+                                <th class="p-3 text-center">النقط (هدية / إجمالي)</th>
+                                <th class="p-3 text-center">تواصل واتساب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody" class="divide-y divide-gray-100">
+                            <!-- بيانات الزباين هتنزل هنا -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة إدارة بانر العروض -->
+    <div id="offersModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#C0392B] text-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-xl">🔥 إدارة بانر العروض الأسبوعية</h3>
+                <button onclick="closeOffersModal()" class="text-3xl leading-none hover:text-gray-200">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <div class="bg-red-50 p-4 rounded-2xl border border-red-100 mb-4">
+                    <h4 class="font-bold text-[#C0392B] mb-3">إضافة عرض جديد للبانر</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input id="offerTitle" type="text" placeholder="اسم العرض" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                        <input id="offerPrice" type="text" placeholder="السعر" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">صورة العرض (من الموبايل):</label>
+                        <input id="offerImageFile" type="file" accept="image/*" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full bg-white outline-none focus:border-[#C0392B] text-xs">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">لما الزبون يدوس على العرض يروح قسم إيه؟</label>
+                        <select id="offerLink" class="border-2 border-red-200 rounded-xl px-3 py-2 w-full outline-none focus:border-[#C0392B]">
+                            <option value="special_offers">عروض خاصة</option>
+                            <option value="frozen">المجمدات</option>
+                            <option value="gateau">الجاتوهات</option>
+                            <option value="western">حلويات غربية</option>
+                            <option value="oriental">حلويات شرقية</option>
+                        </select>
+                    </div>
+                    <button onclick="saveOfferToBanner()" id="saveOfferBtn" class="bg-[#C0392B] hover:bg-[#922B21] text-white px-4 py-2.5 rounded-xl font-bold w-full transition-colors flex items-center justify-center gap-2">
+                        <span>إضافة العرض للبانر</span>
+                    </button>
+                </div>
+
+                <h4 class="font-bold text-[#5A1E20] mb-2">العروض الحالية المعروضة للزباين:</h4>
+                <div class="border rounded-xl overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2 text-right">الصورة</th>
+                                <th class="p-2 text-right">تفاصيل العرض</th>
+                                <th class="p-2 text-center">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offersTableBody" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة إدارة الأقسام الحالية (تعديل ومسح) -->
+    <div id="manageCategoriesModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#2980B9] text-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-xl">إدارة الأقسام الحالية</h3>
+                <button onclick="closeManageCategoriesModal()" class="text-3xl leading-none hover:text-gray-200">×</button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-2 text-right">صورة</th>
+                            <th class="p-2 text-right">الاسم</th>
+                            <th class="p-2 text-center">الترتيب</th>
+                            <th class="p-2 text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manageCategoriesTableBody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة إضافة وتعديل قسم -->
+    <div id="categoryModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#8E44AD] text-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-xl">إضافة / تعديل قسم</h3>
+                <button onclick="closeCategoryModal()" class="text-3xl leading-none hover:text-gray-200">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">معرف القسم بالإنجليزي (Id) بدون مسافات *</label>
+                    <input id="catId" type="text" placeholder="مثال: drinks" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none" dir="ltr">
+                    <p class="text-[10px] text-gray-500 mt-1">* المعرف لا يمكن تغييره عند التعديل</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">اسم القسم بالعربي *</label>
+                    <input id="catName" type="text" placeholder="مثال: مشروبات وعصائر" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">رقم الترتيب (order)</label>
+                    <input id="catOrder" type="number" value="10" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">أيقونة FontAwesome</label>
+                    <input id="catIcon" type="text" value="fa-utensils" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">📸 صورة القسم (اختياري عند التعديل)</label>
+                    <input id="catImageFile" type="file" accept="image/*" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-2.5 outline-none bg-white text-xs">
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t flex flex-row gap-3 justify-end bg-gray-50 rounded-b-3xl shrink-0">
+                <button onclick="closeCategoryModal()" class="px-6 py-2.5 rounded-2xl font-bold border flex-1 md:flex-none bg-white">إلغاء</button>
+                <button onclick="saveNewCategory()" id="saveCatBtn" class="bg-[#8E44AD] text-white px-8 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 flex-1 md:flex-none">
+                    <span>حفظ القسم</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة إضافة وتعديل المنتجات -->
+    <div id="productModal" class="hidden fixed inset-0 bg-black/60 items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md modal shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-[#5A1E20] text-white rounded-t-3xl shrink-0">
+                <h3 id="modalTitle" class="font-bold text-xl">إضافة منتج جديد</h3>
+                <button onclick="closeModal()" class="text-3xl leading-none hover:text-[#C69C6D]">×</button>
+            </div>
+            
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <input type="hidden" id="editDocId">
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">اسم المنتج *</label>
+                    <input id="prodName" type="text" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">القسم الرئيسي *</label>
+                        <select id="prodMainCat" onchange="updateSubCatOptions()" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none bg-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">القسم الفرعي</label>
+                        <select id="prodSubCat" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none bg-white"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">السعر (بالجنيه) *</label>
+                        <input id="prodPrice" type="number" step="1" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-3 focus:border-[#5A1E20] outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex items-center gap-3 cursor-pointer bg-[#fff8f0] px-4 py-3 rounded-2xl border border-[#C69C6D] w-full">
+                            <input type="checkbox" id="prodFlexible" class="w-5 h-5 accent-[#5A1E20]">
+                            <span class="font-bold text-sm">يتباع بالكيلو (مرن)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold mb-1.5 text-[#5A1E20]">📸 صورة المنتج</label>
+                    <input id="prodImageFile" type="file" accept="image/*" onchange="previewSelectedImage(event)" class="w-full border-2 border-[#C69C6D] rounded-2xl px-4 py-2.5 focus:border-[#5A1E20] outline-none bg-white text-xs">
+                    <input id="prodExistingImageUrl" type="hidden">
+                    
+                    <div id="imagePreviewContainer" class="mt-3 flex items-center gap-3 bg-[#fff8f0] p-2 rounded-xl border border-[#C69C6D] hidden">
+                        <img id="imagePreview" src="" class="w-14 h-14 object-cover rounded-lg border border-[#C69C6D]">
+                        <span class="text-xs font-bold text-[#5A1E20]">تم تجهيز الصورة بنجاح ✅</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t flex flex-row gap-3 justify-end bg-gray-50 rounded-b-3xl shrink-0">
+                <button onclick="closeModal()" class="px-6 py-2.5 rounded-2xl font-bold border flex-1 md:flex-none bg-white">إلغاء</button>
+                <button onclick="saveProduct()" id="saveBtn" class="bg-[#5A1E20] text-white px-8 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 flex-1 md:flex-none">
+                    <span>حفظ المنتج</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- استدعاء ملف الإعدادات الموحد -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let products = [];
+        let bannerOffers = [];
+        let customers = [];
+        let categories = []; 
+        let currentFilter = { search: '', category: '' };
+
+        // ==================== نظام الدخول ====================
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginGate').classList.add('hidden');
+                loadProducts(); 
+            } else {
+                document.getElementById('loginGate').classList.remove('hidden');
+            }
+        });
+
+        function adminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const pass = document.getElementById('adminPassInput').value;
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('loginError');
+            if(!email || !pass) return;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الدخول...`;
+            btn.disabled = true;
+            err.classList.add('hidden');
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => { btn.innerHTML = `دخول للوحة التحكم`; btn.disabled = false; })
+                .catch(() => { err.classList.remove('hidden'); btn.innerHTML = `دخول للوحة التحكم`; btn.disabled = false; });
+        }
+
+        function adminLogout() { auth.signOut(); }
+
+        // ==================== معالجة الصور ====================
+        function compressAndConvertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 450;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
+                    };
+                };
+                reader.onerror = (error) => reject(error);
+            });
+        }
+
+        function previewSelectedImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const previewImg = document.getElementById('imagePreview');
+                previewImg.src = URL.createObjectURL(file);
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            }
+        }
+
+        // ==================== سحب البيانات والديناميكية ====================
+        function loadProducts() {
+            document.getElementById('productsTable').innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-[#C69C6D]"><i class="fas fa-spinner fa-spin text-3xl"></i></td></tr>`;
+
+            db.collection("categories").orderBy("order").onSnapshot((snapshot) => {
+                categories = [];
+                snapshot.forEach((doc) => categories.push(doc.data()));
+                renderCategoriesDropdowns();
+                renderTable(); 
+            });
+
+            db.collection("products").orderBy("mainCat").onSnapshot((snapshot) => {
+                products = [];
+                snapshot.forEach((doc) => products.push({ docId: doc.id, ...doc.data() }));
+                renderTable();
+                document.getElementById('syncStatus').innerHTML = 'الربط شغال ومحدث أوتوماتيك';
+            });
+            
+            db.collection("banner_offers").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+                bannerOffers = [];
+                snapshot.forEach((doc) => bannerOffers.push({ docId: doc.id, ...doc.data() }));
+                renderOffersTable();
+            });
+
+            db.collection("customers").onSnapshot((snapshot) => {
+                customers = [];
+                snapshot.forEach((doc) => customers.push({ docId: doc.id, ...doc.data() }));
+                renderCustomersTable();
+            });
+        }
+
+        function renderCategoriesDropdowns() {
+            const filterSelect = document.getElementById('categoryFilter');
+            const prodSelect = document.getElementById('prodMainCat');
+
+            const currentFilterVal = filterSelect.value;
+            const currentProdVal = prodSelect.value;
+
+            const legacyNames = {
+                western: "حلويات غربية", gateau: "جاتوهات", oriental: "حلويات شرقية",
+                meat: "لحوم بلدي", frozen: "مجمدات", grocery: "بقالة وأجبان",
+                sauces: "صوصات", tasali: "تسالي ومشروبات", special_offers: "عروض خاصة"
+            };
+
+            const allCategories = { ...legacyNames };
+            categories.forEach(cat => { allCategories[cat.id] = cat.name; });
+
+            let filterHtml = '<option value="">كل الأقسام</option>';
+            let prodHtml = '';
+
+            for (const [id, name] of Object.entries(allCategories)) {
+                filterHtml += `<option value="${id}">${name}</option>`;
+                prodHtml += `<option value="${id}">${name}</option>`;
+            }
+
+            filterSelect.innerHTML = filterHtml;
+            prodSelect.innerHTML = prodHtml;
+
+            if (currentFilterVal) filterSelect.value = currentFilterVal;
+            if (currentProdVal) prodSelect.value = currentProdVal;
+            
+            updateSubCatOptions();
+        }
+
+        function getMainCatName(catId) {
+            const cat = categories.find(c => c.id === catId);
+            if(cat) return cat.name;
+            const legacyNames = {
+                western: "حلويات غربية", gateau: "جاتوهات", oriental: "حلويات شرقية",
+                meat: "لحوم بلدي", frozen: "مجمدات", grocery: "بقالة وأجبان",
+                sauces: "صوصات", tasali: "تسالي ومشروبات", special_offers: "عروض خاصة"
+            };
+            return legacyNames[catId] || catId;
+        }
+
+        const subCatMap = {
+            western: [{ id: "torts_28", name: "مقاس 28 وقلب" }, { id: "torts_24", name: "تورت 24" }, { id: "torts_18", name: "تورت 18" }, { id: "torts_other", name: "تورت أخرى" }],
+            gateau: [{ id: "all_gateau", name: "كل الجاتوهات" }],
+            oriental: [{ id: "all", name: "كل الحلويات الشرقية" }],
+            meat: [{ id: "kandooz", name: "لحوم كندوز" }, { id: "dani", name: "لحوم ضاني" }, { id: "fwa2ek", name: "فواكه اللحوم" }],
+            frozen: [{ id: "strips", name: "استربس" }, { id: "burger", name: "برجر وكفتة" }],
+            grocery: [{ id: "all", name: "كل البقالة" }],
+            sauces: [{ id: "all", name: "كل الصوصات" }],
+            tasali: [{ id: "all", name: "كل التسالي" }],
+            special_offers: [{ id: "all", name: "كل العروض" }]
+        };
+
+        function updateSubCatOptions(selectedValue = null) {
+            const mainCatId = document.getElementById('prodMainCat').value;
+            const subSelect = document.getElementById('prodSubCat');
+            subSelect.innerHTML = '';
+
+            const dbCat = categories.find(c => c.id === mainCatId);
+            let subsToUse = (dbCat && dbCat.subCats && dbCat.subCats.length > 0) ? dbCat.subCats : (subCatMap[mainCatId] || [{ id: "all", name: "كل المنتجات" }]);
+
+            subsToUse.forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt.id; optionEl.textContent = opt.name;
+                if (selectedValue === opt.id) optionEl.selected = true;
+                subSelect.appendChild(optionEl);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('productsTable');
+            let data = products;
+
+            if (currentFilter.search) data = data.filter(p => p.name.toLowerCase().includes(currentFilter.search));
+            if (currentFilter.category) data = data.filter(p => p.mainCat === currentFilter.category);
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center font-bold text-red-500">مفيش منتجات معروضة</td></tr>`;
+                document.getElementById('totalCount').innerText = '0';
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                const isFlex = p.isFlexible ? `<span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-bold">نعم</span>` : `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">لا</span>`;
+                const imgHtml = p.image ? `<img src="${p.image}" class="product-img">` : `<div class="w-[60px] h-[60px] bg-gray-200 rounded-xl"></div>`;
+
+                return `
+                <tr class="table-row border-b border-gray-100">
+                    <td class="px-4 py-3">${imgHtml}</td>
+                    <td class="px-4 py-3 font-bold text-base whitespace-nowrap">${p.name}</td>
+                    <td class="px-4 py-3 whitespace-nowrap"><span class="bg-[#5A1E20] text-white text-xs px-3 py-1 rounded-full">${getMainCatName(p.mainCat)}</span></td>
+                    <td class="px-4 py-3 text-center font-extrabold text-[#C0392B] whitespace-nowrap">${p.price} ج</td>
+                    <td class="px-4 py-3 text-center">${isFlex}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick="editProduct('${p.docId}')" class="w-8 h-8 flex items-center justify-center bg-[#C69C6D] text-white rounded-lg hover:bg-[#b0885e]"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteProduct('${p.docId}', '${p.name}')" class="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+            document.getElementById('totalCount').innerText = data.length;
+        }
+
+        function filterTable() {
+            currentFilter.search = document.getElementById('searchInput').value.toLowerCase().trim();
+            currentFilter.category = document.getElementById('categoryFilter').value;
+            renderTable();
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').innerText = 'إضافة منتج جديد';
+            document.getElementById('editDocId').value = '';
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodImageFile').value = '';
+            document.getElementById('prodExistingImageUrl').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('prodFlexible').checked = false;
+            
+            const prodMainCat = document.getElementById('prodMainCat');
+            if(prodMainCat.options.length > 0) prodMainCat.selectedIndex = 0;
+            updateSubCatOptions();
+            document.getElementById('productModal').classList.replace('hidden', 'flex');
+        }
+
+        function editProduct(docId) {
+            const product = products.find(p => p.docId === docId);
+            if (!product) return;
+            document.getElementById('modalTitle').innerText = 'تعديل المنتج';
+            document.getElementById('editDocId').value = docId;
+            document.getElementById('prodName').value = product.name || '';
+            document.getElementById('prodPrice').value = product.price || '';
+            document.getElementById('prodImageFile').value = '';
+            document.getElementById('prodExistingImageUrl').value = product.image || '';
+            
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            if (product.image) {
+                previewImg.src = product.image;
+                previewContainer.classList.remove('hidden');
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+
+            document.getElementById('prodFlexible').checked = !!product.isFlexible;
+            document.getElementById('prodMainCat').value = product.mainCat;
+            updateSubCatOptions(product.subCat);
+            document.getElementById('productModal').classList.replace('hidden', 'flex');
+        }
+
+        function closeModal() { document.getElementById('productModal').classList.replace('flex', 'hidden'); }
+
+        async function saveProduct() {
+            const docId = document.getElementById('editDocId').value;
+            const fileInput = document.getElementById('prodImageFile');
+            let finalImage = document.getElementById('prodExistingImageUrl').value;
+            const name = document.getElementById('prodName').value.trim();
+            const price = parseFloat(document.getElementById('prodPrice').value);
+
+            if (!name || isNaN(price)) return alert('يا فندم لازم نكتب اسم المنتج والسعر!');
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...`;
+            btn.disabled = true;
+
+            try {
+                if (fileInput.files && fileInput.files[0]) {
+                    finalImage = await compressAndConvertToBase64(fileInput.files[0]);
+                }
+                const data = {
+                    name: name, mainCat: document.getElementById('prodMainCat').value,
+                    subCat: document.getElementById('prodSubCat').value || 'all', price: price,
+                    image: finalImage, isFlexible: document.getElementById('prodFlexible').checked,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (docId) {
+                    await db.collection("products").doc(docId).update(data);
+                } else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection("products").add(data);
+                }
+                closeModal();
+            } catch (e) { alert("حصل خطأ أثناء حفظ المنتج!"); }
+            btn.innerHTML = `حفظ المنتج`;
+            btn.disabled = false;
+        }
+
+        async function deleteProduct(docId, name) {
+            if (confirm(`تأكيد مسح المنتج: متأكدة إنك عايزة تمسحي "${name}"؟`)) {
+                await db.collection("products").doc(docId).delete();
+            }
+        }
+
+        // ==================== عروض البانر ====================
+        function showOffersModal() { document.getElementById('offersModal').classList.replace('hidden', 'flex'); }
+        function closeOffersModal() { document.getElementById('offersModal').classList.replace('flex', 'hidden'); }
+
+        function renderOffersTable() {
+            const tbody = document.getElementById('offersTableBody');
+            if (bannerOffers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500 font-bold">مفيش عروض في البانر دلوقتي</td></tr>';
+                return;
+            }
+            tbody.innerHTML = bannerOffers.map(o => `
+                <tr class="border-b">
+                    <td class="p-2 w-16"><img src="${o.image}" class="w-12 h-12 rounded object-cover border border-[#C69C6D]"></td>
+                    <td class="p-2 font-bold text-sm">${o.title}<br><span class="text-[#C0392B]">${o.price}</span></td>
+                    <td class="p-2 text-center w-12"><button onclick="deleteOfferFromBanner('${o.docId}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-lg"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function saveOfferToBanner() {
+            const title = document.getElementById('offerTitle').value.trim();
+            const price = document.getElementById('offerPrice').value.trim();
+            const fileInput = document.getElementById('offerImageFile');
+            const link = document.getElementById('offerLink').value;
+
+            if (!title || !fileInput.files[0]) return alert('لازم تكتبي اسم العرض وتختاري صورته من الموبايل!');
+            const btn = document.getElementById('saveOfferBtn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...`;
+            btn.disabled = true;
+
+            try {
+                const imageBase64 = await compressAndConvertToBase64(fileInput.files[0]);
+                await db.collection("banner_offers").add({
+                    title: title, price: price, image: imageBase64, link: link,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('offerTitle').value = '';
+                document.getElementById('offerPrice').value = '';
+                document.getElementById('offerImageFile').value = '';
+            } catch (e) { alert("حصل خطأ في حفظ العرض!"); }
+            btn.innerHTML = `إضافة العرض للبانر`;
+            btn.disabled = false;
+        }
+
+        async function deleteOfferFromBanner(docId) {
+            if (confirm('متأكدة إنك عايزة تمسحي العرض ده من البانر؟')) await db.collection("banner_offers").doc(docId).delete();
+        }
+
+        // ==================== الأقسام (إضافة / تعديل / عرض / حذف) ====================
+        function showManageCategoriesModal() { 
+            document.getElementById('manageCategoriesModal').classList.replace('hidden', 'flex'); 
+            renderManageCategoriesTable();
+        }
+        function closeManageCategoriesModal() { document.getElementById('manageCategoriesModal').classList.replace('flex', 'hidden'); }
+
+        function renderManageCategoriesTable() {
+            const tbody = document.getElementById('manageCategoriesTableBody');
+            if (categories.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center font-bold text-gray-500">لا يوجد أقسام مضافة من لوحة التحكم</td></tr>';
+                return;
+            }
+            const sortedCats = [...categories].sort((a,b) => a.order - b.order);
+            tbody.innerHTML = sortedCats.map(c => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-2 w-16">${c.image ? `<img src="${c.image}" class="w-10 h-10 rounded object-cover border">` : 'بدون'}</td>
+                    <td class="p-2 font-bold">${c.name} <br> <span class="text-xs text-gray-400">(${c.id})</span></td>
+                    <td class="p-2 text-center font-bold text-[#2980B9]">${c.order || 10}</td>
+                    <td class="p-2 text-center w-24">
+                        <button onclick="editCategory('${c.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg text-lg"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteCategoryFromDB('${c.id}', '${c.name}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-lg"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showCategoryModal() {
+            document.getElementById('catId').value = '';
+            document.getElementById('catId').readOnly = false; // السماح بالكتابة
+            document.getElementById('catName').value = '';
+            document.getElementById('catOrder').value = '10';
+            document.getElementById('catIcon').value = 'fa-utensils';
+            document.getElementById('catImageFile').value = '';
+            document.getElementById('categoryModal').classList.replace('hidden', 'flex');
+        }
+
+        function editCategory(id) {
+            const cat = categories.find(c => c.id === id);
+            if(!cat) return;
+            document.getElementById('catId').value = cat.id;
+            document.getElementById('catId').readOnly = true; // منع تغيير المعرف عشان ميبوظش المنتجات
+            document.getElementById('catName').value = cat.name;
+            document.getElementById('catOrder').value = cat.order || 10;
+            document.getElementById('catIcon').value = cat.icon || 'fa-utensils';
+            document.getElementById('catImageFile').value = ''; // تصفير الصورة
+            
+            closeManageCategoriesModal();
+            document.getElementById('categoryModal').classList.replace('hidden', 'flex');
+        }
+
+        function closeCategoryModal() { document.getElementById('categoryModal').classList.replace('flex', 'hidden'); }
+
+        async function saveNewCategory() {
+            const id = document.getElementById('catId').value.trim();
+            const name = document.getElementById('catName').value.trim();
+            const order = parseInt(document.getElementById('catOrder').value) || 10;
+            const icon = document.getElementById('catIcon').value.trim() || 'fa-utensils';
+            const fileInput = document.getElementById('catImageFile');
+
+            if (!id || !name) return alert('يا فندم لازم نكتب معرف القسم بالإنجليزي واسمه بالعربي!');
+
+            const btn = document.getElementById('saveCatBtn');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...`;
+            btn.disabled = true;
+
+            try {
+                let imageUrl = '';
+                const existingCat = categories.find(c => c.id === id);
+                if (existingCat && existingCat.image) imageUrl = existingCat.image; // الاحتفاظ بالصورة القديمة لو معدلهاش
+
+                if (fileInput.files && fileInput.files[0]) {
+                    imageUrl = await compressAndConvertToBase64(fileInput.files[0]);
+                }
+
+                await db.collection("categories").doc(id).set({
+                    id: id, name: name, order: order, icon: icon, image: imageUrl,
+                    subCats: (existingCat && existingCat.subCats) ? existingCat.subCats : [{ id: "all", name: "كل المنتجات" }]
+                }, { merge: true });
+
+                alert('✅ تم حفظ القسم بنجاح!');
+                closeCategoryModal();
+            } catch (e) { alert('❌ حصل خطأ أثناء الحفظ: ' + e.message); }
+
+            btn.innerHTML = `حفظ القسم`;
+            btn.disabled = false;
+        }
+
+        async function deleteCategoryFromDB(catId, catName) {
+            if(confirm(`تأكيد مسح: هل أنت متأكد من مسح قسم "${catName}"؟`)) {
+                try {
+                    await db.collection("categories").doc(catId).delete();
+                } catch (error) { alert('حصل خطأ أثناء المسح!'); }
+            }
+        }
+
+        // ==================== العملاء والنقاط ====================
+        function showCustomersModal() { document.getElementById('customersModal').classList.replace('hidden', 'flex'); }
+        function closeCustomersModal() { document.getElementById('customersModal').classList.replace('flex', 'hidden'); }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTableBody');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-400 font-bold">لا يوجد عملاء مسجلين حتى الآن</td></tr>';
+                return;
+            }
+            tbody.innerHTML = customers.map(c => `
+                <tr class="hover:bg-green-50 transition-colors">
+                    <td class="p-3 font-bold text-[#5A1E20]">${c.name || 'بدون اسم'}</td>
+                    <td class="p-3 font-semibold text-gray-700" dir="ltr">${c.phone || '-'}</td>
+                    <td class="p-3 text-xs text-gray-500">${c.address || 'لم يسجل عنوان'}</td>
+                    <td class="p-3 text-center font-extrabold text-base">
+                        <span style="color: #f1c40f;"><i class="fas fa-star"></i> ${c.points || 0}</span> <br> 
+                        <span style="color: #27ae60; font-size: 0.8rem;">إجمالي: ${c.lifetimePoints || c.points || 0}</span>
+                    </td>
+                    <td class="p-3 text-center"><a href="https://wa.me/2${c.phone}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"><i class="fab fa-whatsapp"></i></a></td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "لقمة و بسبوسة (بسنت)",
+  "short_name": "لقمة وبسبوسة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFDF9",
+  "theme_color": "#5A1E20",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

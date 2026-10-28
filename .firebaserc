@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "mazen-admin"
+  },
+  "targets": {
+    "mazen-admin": {
+      "hosting": {
+        "lokmawbasbosa": [
+          "lokmawbasbosa"
+        ],
+        "mazen-admin": [
+          "mazen-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

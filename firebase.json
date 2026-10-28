@@ -1,0 +1,24 @@
+{
+  "hosting": [
+    {
+      "target": "mazen-admin",
+      "public": ".",
+      "redirects": [
+        {
+          "source": "/**",
+          "destination": "https://lokmawbasbosa.web.app",
+          "type": 301
+        }
+      ]
+    },
+    {
+      "target": "lokmawbasbosa",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ]
+}

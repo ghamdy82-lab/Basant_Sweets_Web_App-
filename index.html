@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#5A1E20">
+    <link rel="icon" type="image/jpeg" href="https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg">
+    <link rel="manifest" href="manifest.json">
+    <title>لقمة و بسبوسة (بسنت) </title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button class="sticky-cart" id="stickyCartBtn" onclick="openCart()">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="sticky-cart-badge" id="stickyCartCount">0</span>
+    </button>
+
+    <div class="toast" id="toastBox">
+        <i class="fas fa-info-circle" id="toastIcon"></i>
+        <span id="toastMsg">رسالة</span>
+    </div>
+
+    <header class="header">
+        <div class="header-side">
+            <button class="icon-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <a href="https://wa.me/201151004546" target="_blank" class="social-icon whatsapp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.facebook.com/share/1FVqKzyYGM/" target="_blank" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>
+        </div>
+        <div class="logo-container">
+            <img src="https://i.postimg.cc/vBFCjWms/lwjw-bsnt-jdyd.jpg" alt="لقمة و بسبوسة (بسنت)" class="logo-img">
+            <div class="logo-text">لقمة و بسبوسة</div>
+        </div>
+        <div class="header-side header-side-end">
+            <button class="icon-btn points-btn" onclick="openPointsModal()"><i class="fas fa-star"></i></button>
+        </div>
+    </header>
+
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span>القائمة والأقسام</span><button onclick="toggleSidebar()">×</button>
+        </div>
+        <div class="sidebar-menu" id="sidebarMenu"></div>
+    </div>
+
+    <!-- شاشة حسابي -->
+    <div class="modal" id="accountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👤 حسابي وبياناتي</h2>
+                <button class="close-btn" onclick="closeModals()">×</button>
+            </div>
+            
+            <div id="profileView" class="hidden-view">
+                <bdo dir="rtl"></bdo>
+                <div class="profile-card">
+                    <p class="profile-item-primary"><i class="fas fa-user icon-gold"></i> <span id="displayAccName"></span></p>
+                    <p class="profile-item-text"><i class="fas fa-phone-alt icon-gold"></i> <span id="displayAccPhone" dir="ltr"></span></p>
+                    <p class="profile-item-desc"><i class="fas fa-map-marker-alt icon-gold"></i> <span id="displayAccAddress"></span></p>
+                </div>
+                <button class="add-btn btn-outline" onclick="toggleEditMode()">✏️ تعديل بياناتي</button>
+            </div>
+
+            <div id="editView">
+                <p class="edit-hint">سجل بياناتك مرة واحدة بس عشان تطلب بسرعة بعد كده!</p>
+                <div class="form-group"><label>الاسم</label><input type="text" id="accName" class="form-control" placeholder="الاسم ثلاثي"></div>
+                <div class="form-group"><label>الموبايل</label><input type="tel" id="accPhone" class="form-control" placeholder="01xxxxxxxxx"></div>
+                <div class="form-group"><label>العنوان (لو هتحتاج توصيل)</label><input type="text" id="accAddress" class="form-control" placeholder="المنطقة، الشارع، العمارة"></div>
+                <div id="accSuccess" class="success-msg hidden-view">✅ تم حفظ بياناتك بنجاح!</div>
+                <button class="add-btn" onclick="saveAccountData()">حفظ البيانات</button>
+                <button id="cancelEditBtn" class="add-btn btn-cancel hidden-view" onclick="toggleEditMode()">إلغاء التعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة النقاط -->
+    <div class="modal" id="pointsModal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>⭐ نظام المكافآت</h2>
+                <button class="close-btn" onclick="closeModals()">×</button>
+            </div>
+            <div class="points-icon-lg"><i class="fas fa-gift"></i></div>
+            
+            <div class="reward-box">
+                رصيدك الحالي للهدية: <span id="rewardPointsDisplay" class="points-val-lg">0</span> نقطة!
+            </div>
+            
+            <div class="vip-box">
+                🌟 إجمالي نقاطك (VIP): <span id="lifetimePointsDisplay">0</span> نقطة
+            </div>
+
+            <h3 class="points-title">جمع النقط واكسب هدايا!</h3>
+            <p class="points-desc">كل 10 جنيه بتشتري بيهم بيتحسبلك نقطة.<br>جمع 200 نقطة واستلم هديتك المجانية من بسنت.</p>
+        </div>
+    </div>
+
+    <div class="delivery-notice">الطلبات متاحة طوال الأسبوع | 🏠 التسليم يوم الخميس فقط</div>
+    <div class="search-container"><input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث عن منتج..." onkeyup="searchProducts()"></div>
+
+    <div class="offers-banner hidden-view" id="mainOffersBannerSection">
+        <h3 class="offers-section-title">🔥 عروض الأسبوع 🔥</h3>
+        <div class="offers-scroll" id="dynamicOffersBanner"></div>
+    </div>
+
+    <div class="container">
+        <!-- الفاترينة الرئيسية -->
+        <div id="homeCategoriesView" class="home-categories-grid"></div>
+
+        <!-- حاوية المنتجات -->
+        <div id="productsSection" class="hidden-view">
+            <div class="sub-tabs-wrapper">
+                <h2 id="catTitle" class="section-title">🎂 حلويات غربية</h2>
+                <div class="sub-tabs" id="subTabs"></div>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="bottom-nav-item active" id="navHome" onclick="goHome()"><i class="fas fa-home"></i><span>الرئيسية</span></button>
+        <button class="bottom-nav-item" id="navCart" onclick="openCart()"><i class="fas fa-shopping-cart"></i><span>السلة</span></button>
+        <button class="bottom-nav-item" id="navOrders" onclick="openOrders()"><i class="fas fa-list-alt"></i><span>طلباتي</span></button>
+        <button class="bottom-nav-item" id="navProfile" onclick="openAccountModal()"><i class="fas fa-user"></i><span>حسابي</span></button>
+    </nav>
+
+    <section class="reviews-section" id="reviewsSection">
+        <h2 class="reviews-title">💬 رأي عملائنا في بسنت</h2>
+        <div class="reviews-scroll" id="reviewsScroll"></div>
+        <div class="text-center mt-15">
+            <button class="add-btn btn-auto" onclick="openReviewModal()"><i class="fas fa-star"></i> أضف تقييمك</button>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <h3>حلويات بسنت</h3>
+        <p>معانا تلاقي الحلو والحادق في مكان واحد، بأعلى جودة.</p>
+        <p><i class="fas fa-phone-alt icon-gold ml-5"></i> للطلبات: 01151004546</p>
+        <div class="copyright">© 2026 All Rights Reserved to Basent Sweets | Designed by Eng. Taghreed Hamdy</div>
+    </footer>
+
+    <!-- شاشة التقييم -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>✍️ أضف تقييمك</h2><button class="close-btn" onclick="closeModals()">×</button></div>
+            <div class="form-group"><label>اسمك</label><input type="text" id="reviewName" class="form-control"></div>
+            <div class="form-group">
+                <label>التقييم</label>
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-value="1">⭐</span><span class="star" data-value="2">⭐</span><span class="star" data-value="3">⭐</span><span class="star" data-value="4">⭐</span><span class="star" data-value="5">⭐</span>
+                </div>
+                <input type="hidden" id="reviewStars" value="5">
+            </div>
+            <div class="form-group"><label>تعليقك</label><textarea id="reviewText" class="form-control" rows="2"></textarea></div>
+            <div class="form-group"><label>المنتج اللي قيمته</label><input type="text" id="reviewProduct" class="form-control"></div>
+            <div id="reviewSuccess" class="success-msg hidden-view">✅ تم الإرسال بنجاح!</div>
+            <button class="add-btn" onclick="submitReview()">إرسال التقييم</button>
+        </div>
+    </div>
+
+    <!-- شاشة السلة -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>🛒 سلة المشتريات</h2><button class="close-btn" onclick="closeModals()">×</button></div>
+            <div id="cartItems"></div>
+            
+            <div class="cart-summary-box">
+                <div class="summary-row"><span>المنتجات:</span> <strong id="cartSubtotal" class="summary-val-primary">0 ج</strong></div>
+                <div id="deliveryFeeDisplay" class="summary-row delivery-row hidden-view"><span>التوصيل:</span> <strong id="cartDeliveryFee" class="summary-val-danger">0 ج</strong></div>
+                <div class="summary-row summary-total"><span>الإجمالي:</span> <strong id="cartGrandTotal" class="summary-val-lg">0 ج</strong></div>
+                <div id="cartPoints" class="cart-points-alert hidden-view">⭐ هتكسب في الطلب ده: <span id="pointsValue" class="points-val-md">0</span> نقطة!</div>
+            </div>
+            
+            <div class="form-group"><label>📝 ملاحظات للطلب</label><textarea id="orderNotes" class="form-control" rows="2"></textarea></div>
+            
+            <h3 class="section-subtitle">📋 بيانات العميل والتسليم</h3>
+            <div id="cartCustomerInfo" class="customer-info-box"></div>
+            
+            <div id="customerFormFields">
+                <div class="form-group">
+                    <label>طريقة التسليم للطلب ده (إجباري)</label>
+                    <div class="delivery-options">
+                        <button class="del-btn" id="btn-delivery" onclick="selectDelivery('توصيل للمنزل')">🚚 توصيل للمنزل</button>
+                        <button class="del-btn" id="btn-pickup" onclick="selectDelivery('استلام من معرض تحيا مصر')">🏠 استلام من معرض تحيا مصر</button>
+                    </div>
+                </div>
+                <div class="form-group delivery-area-box hidden-view" id="deliveryAreaGroup">
+                    <label class="area-label">📍 اختر المنطقة لتحديد مصاريف الشحن:</label>
+                    <select id="deliveryArea" class="form-control" onchange="renderCart()">
+                        <option value="0" disabled selected>-- اضغط لاختيار منطقتك --</option>
+                        <option value="45">القطامية (+ 45 ج)</option>
+                        <option value="40">المحليات - التجمع (+ 40 ج)</option>
+                        <option value="65">الخامس - التجمع (+ 65 ج)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="add-btn btn-whatsapp" onclick="sendOrder()"><i class="fab fa-whatsapp"></i> تأكيد وإرسال الطلب</button>
+        </div>
+    </div>
+
+    <!-- شاشة الطلبات -->
+    <div class="modal" id="ordersModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>📋 طلباتي السابقة</h2><button class="close-btn" onclick="closeModals()">×</button></div>
+            <div id="myOrdersList"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
